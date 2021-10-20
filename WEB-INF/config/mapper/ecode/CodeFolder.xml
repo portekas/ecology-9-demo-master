@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cloudstore.dev.api.mapper.FolderMapper">
+
+    <select id="folderListMysql" resultMap="resultMap1">
+        select
+        f.id,f.name,f.creater,f.flownum,
+        concat(concat(f.modifydate, ' '), f.modifytime) as opTime,
+        hrm.lastname
+        from
+        cloudstore_codefolder f
+        left join hrmresource hrm
+        on
+        f.creater = hrm.id
+        where 1=1
+        and f.parentid = #{folder.parentId}
+        and f.deleted = #{folder.deleted}
+        and f.attribute != #{folder.attribute}
+        <if test="folder.status != null and folder.status != ''">
+            and f.status = #{folder.status}
+        </if>
+        <if test="folder.name != null and folder.name != ''">
+            and (
+                (f.id = #{folder.name} )
+                or
+                (f.name like concat(concat('%', #{folder.name}), '%'))
+                or
+                (concat(f.name, f.flownum) like concat(concat('%', #{folder.name}), '%'))
+            )
+        </if>
+        <if test="list != null ">
+            and f.foldertype in
+            <foreach collection="list" item="list" separator="," open="(" close=")">
+                #{list}
+            </foreach>
+        </if>
+        order by f.modifydate desc,f.modifytime desc,f.id desc
+        limit #{pageNum},#{pageSize}
+    </select>
+    <resultMap id="resultMap1" type="com.cloudstore.dev.bean.ReleaseLog">
+        <id column="id" property="id"></id>
+        <id column="id" property="folderId"></id>
+        <result column="name" property="folderName"></result>
+        <result column="creater" property="userid"></result>
+        <result column="flownum" property="flowNum"></result>
+        <result column="lastname" property="useridSpan"></result>
+        <result column="opTime" property="opTime"></result>
+        <result column="foldertype" property="folderType"></result>
+    </resultMap>
+
+    <select id="folderListOracle" resultMap="resultMap1">
+
+        select *
+        from
+        (
+        select data.*, ROWNUM as rowno
+        from
+        (
+        select
+        f.id,f.name,f.creater,f.flownum,
+        concat(concat(f.modifydate, ' '), f.modifytime) as opTime,
+        hrm.lastname
+        from cloudstore_codefolder f
+        left join hrmresource hrm
+        on f.creater = hrm.id
+        where 1=1
+        and f.parentid = #{folder.parentId}
+        and f.deleted = #{folder.deleted}
+        and f.attribute != #{folder.attribute}
+        <if test="folder.status != null and folder.status != ''">
+            and f.status = #{folder.status}
+        </if>
+        <if test="folder.name != null and folder.name != ''">
+            and (
+            (f.id = #{folder.name} )
+            or
+            (f.name like concat(concat('%', #{folder.name}), '%'))
+            or
+            (concat(f.name, f.flownum) like concat(concat('%', #{folder.name}), '%'))
+            )
+        </if>
+        <if test="list != null ">
+            and f.foldertype in
+            <foreach collection="list" item="list" separator="," open="(" close=")">
+                #{list}
+            </foreach>
+        </if>
+        ) data
+        ) temp
+        where temp.rowno between #{pageNum} and #{pageSize}
+        order by opTime desc,id desc
+
+    </select>
+
+    <select id="folderListSqlServer" resultMap="resultMap1">
+
+        select top (#{pageSize}) * from
+        (
+        select top 100 percent row_number() over
+        ( ORDER BY f.modifydate desc,f.modifytime DESC ) as rownum,
+        f.*,
+        f.modifydate + ' ' + f.modifytime as opTime,
+        hrm.lastname
+        from cloudstore_codefolder f
+        left join hrmresource hrm
+        on f.creater = hrm.id
+        where 1=1
+        and f.parentid = #{folder.parentId}
+        and f.deleted = #{folder.deleted}
+        and f.attribute != #{folder.attribute}
+        <if test="folder.status != null and folder.status != ''">
+            and f.status = #{folder.status}
+        </if>
+        <if test="folder.name != null and folder.name != ''">
+            and (
+                (f.id = #{folder.name})
+                 or
+                (f.name like '%' + #{folder.name} + '%')
+            )
+        </if>
+        <if test="list != null ">
+            and f.foldertype in
+            <foreach collection="list" item="list" separator="," open="(" close=")">
+                #{list}
+            </foreach>
+        </if>
+        ) as temp
+        where temp.rownum &gt; #{offset}
+
+    </select>
+
+    <select id="countFolder" resultType="int">
+        select
+        count(1)
+        from
+        cloudstore_codefolder f
+        where 1=1
+        and f.parentid = #{folder.parentId}
+        and f.deleted = #{folder.deleted}
+        and f.attribute != #{folder.attribute}
+        <if test="folder.status != null and folder.status != '' ">
+            and f.status = #{folder.status}
+        </if>
+        <if test="folder.name != null and folder.name != ''">
+            and f.name like  concat(concat('%', #{folder.name}), '%')
+        </if>
+        <if test="list != null ">
+            and f.foldertype in
+            <foreach collection="list" item="list" separator="," open="(" close=")">
+                #{list}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="countFolderSql" resultType="int">
+        select
+        count(1)
+        from
+        cloudstore_codefolder f
+        where 1=1
+        and f.parentid = #{folder.parentId}
+        and f.deleted = #{folder.deleted}
+        and f.attribute != #{folder.attribute}
+        <if test="folder.status != null and folder.status != '' ">
+            and f.status = #{folder.status}
+        </if>
+        <if test="folder.name != null and folder.name != ''">
+            and f.name like  '%'+#{folder.name}+'%'
+        </if>
+        <if test="list != null ">
+            and f.foldertype in
+            <foreach collection="list" item="list" separator="," open="(" close=")">
+                #{list}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="mysqlAuthorizedList" resultMap="resultMap1">
+        SELECT t.*
+        from
+        (
+        (
+        SELECT
+        cf.id,
+        cf.name,
+        cf.creater,
+        cf.flownum,
+        hr.lastname
+        FROM
+        cloudstore_codefolder cf
+        LEFT JOIN hrmresource hr ON cf.creater = hr.id
+        WHERE
+        1 = 1
+        AND cf.creater = #{folder.userid}
+        AND cf.parentid = #{folder.parentId}
+        AND cf.deleted = #{folder.deleted}
+        AND cf.attribute != #{folder.attribute}
+        <if test="folder.name != null and folder.name != ''">
+            AND cf.name LIKE  concat(concat('%', #{folder.name}), '%')
+        </if>
+        <if test="typeList != null and typeList.size > 0 ">
+            AND cf.foldertype IN
+            <foreach collection="typeList" item="typeList" separator="," open="(" close=")">
+                #{typeList}
+            </foreach>
+        </if>
+        )
+        UNION
+        (
+        SELECT
+        cf.id,
+        cf.name,
+        cf.creater,
+        cf.flownum,
+        hr.lastname
+        FROM
+        cloudstore_codefolder cf
+        LEFT JOIN hrmresource hr ON cf.creater = hr.id
+        WHERE
+        1 = 1
+        AND cf.parentid = #{folder.parentId}
+        AND cf.deleted = #{folder.deleted}
+        AND cf.attribute != #{folder.attribute}
+        <if test="folder.name != null and folder.name != ''">
+            AND cf.name LIKE  concat(concat('%', #{folder.name}), '%')
+        </if>
+        <if test="typeList != null and typeList.size > 0">
+            AND cf.foldertype IN
+            <foreach collection="typeList" item="typeList" separator="," open="(" close=")">
+                #{typeList}
+            </foreach>
+        </if>
+        AND cf.id in
+        (
+        SELECT cp.folderid FROM cloudstore_permission cp
+        WHERE 1=1
+        AND cp.permission = #{per.permission}
+        AND
+        (
+        (
+          cp.objecttype = 'user' AND cp.objectid = #{folder.userid}
+        )
+        <if test="depList != null and depList.size > 0">
+            OR
+            (
+            cp.objecttype = 'department'
+            AND cp.objectid IN
+            <foreach collection="depList" item="depList" separator="," open="(" close=")">
+                #{depList}
+            </foreach>
+            )
+        </if>
+        <if test="roleList != null and roleList.size > 0">
+            OR
+            (
+            cp.objecttype = 'role'
+            AND cp.objectid IN
+            <foreach collection="roleList" item="roleList" separator="," open="(" close=")">
+                #{roleList}
+            </foreach>
+            )
+        </if>
+        )
+        )
+        )
+        ) t
+        WHERE 1=1
+        limit #{pageNum},#{pageSize}
+    </select>
+
+    <select id="mysqlAuthorizedCount" resultType="int">
+        SELECT count(1)
+        from
+        (
+        (
+        SELECT
+        cf.id
+        FROM
+        cloudstore_codefolder cf
+        WHERE
+        1 = 1
+        AND cf.creater = #{folder.userid}
+        AND cf.parentid = #{folder.parentId}
+        AND cf.deleted = #{folder.deleted}
+        AND cf.attribute != #{folder.attribute}
+        <if test="folder.name != null and folder.name != ''">
+            AND cf.name LIKE  concat(concat('%', #{folder.name}), '%')
+        </if>
+        <if test="typeList != null and typeList.size > 0 ">
+            AND cf.foldertype IN
+            <foreach collection="typeList" item="typeList" separator="," open="(" close=")">
+                #{typeList}
+            </foreach>
+        </if>
+        )
+        UNION
+        (
+        SELECT
+        cf.id
+        FROM
+        cloudstore_codefolder cf
+        WHERE
+        1 = 1
+        AND cf.parentid = #{folder.parentId}
+        AND cf.deleted = #{folder.deleted}
+        AND cf.attribute != #{folder.attribute}
+        <if test="folder.name != null and folder.name != ''">
+            AND cf.name LIKE  concat(concat('%', #{folder.name}), '%')
+        </if>
+        <if test="typeList != null and typeList.size > 0">
+            AND cf.foldertype IN
+            <foreach collection="typeList" item="typeList" separator="," open="(" close=")">
+                #{typeList}
+            </foreach>
+        </if>
+        AND cf.id in
+        (
+        SELECT cp.folderid FROM cloudstore_permission cp
+        WHERE 1=1
+        AND cp.permission = #{per.permission}
+        AND
+        (
+        (
+        cp.objecttype = 'user' AND cp.objectid = #{folder.userid}
+        )
+        <if test="depList != null and depList.size > 0">
+            OR
+            (
+            cp.objecttype = 'department'
+            AND cp.objectid IN
+            <foreach collection="depList" item="depList" separator="," open="(" close=")">
+                #{depList}
+            </foreach>
+            )
+        </if>
+        <if test="roleList != null and roleList.size > 0">
+            OR
+            (
+            cp.objecttype = 'role'
+            AND cp.objectid IN
+            <foreach collection="roleList" item="roleList" separator="," open="(" close=")">
+                #{roleList}
+            </foreach>
+            )
+        </if>
+        )
+        )
+        )
+        ) t
+        WHERE 1=1
+    </select>
+
+</mapper>

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cloudstore.dev.api.mapper.EcodeBlockMapper">
+
+
+    <resultMap id="appScopeMap" type="com.cloudstore.dev.bean.EcodeBlock">
+        <id column="id" property="id"></id>
+        <result column="user_id" property="userId"></result>
+        <result column="obj_id" property="objId"></result>
+        <result column="obj_type" property="objType"></result>
+        <result column="obj_name" property="objName"></result>
+        <result column="manager_name" property="managerName"></result>
+        <result column="include_subordinate" property="includeSubordinate"></result>
+        <result column="sec_level_min" property="secLevelMin"></result>
+        <result column="sec_level_max" property="secLevelMax"></result>
+        <result column="role_job_level" property="roleJobLevel"></result>
+        <result column="job_dep_sub_id" property="jobDepSubId"></result>
+        <result column="job_dep_sub_name" property="jobDepSubName"></result>
+        <result column="modify_date" property="modifyDate"></result>
+        <result column="modify_time" property="modifyTime"></result>
+    </resultMap>
+
+    <select id="blockListMysql" resultMap="appScopeMap">
+        select distinct s.*,hrmm.lastname manager_name,
+        (case when obj_type = 'all' then '所有人'
+        when obj_type = 'user' then hrm.lastname
+        when obj_type = 'department' then dep.departmentmark
+        when obj_type = 'subcompany' then sub.subcompanyname
+        when obj_type = 'role' then ro.rolesmark
+        when obj_type = 'job' then jo.jobtitlemark
+        else null
+        end
+        ) as obj_name
+        FROM cloudstore_blockcode s
+        LEFT JOIN hrmresource hrm ON s.obj_id = hrm.id
+        LEFT JOIN hrmresourcemanager hrmm ON s.obj_id = hrmm.id
+        LEFT JOIN hrmdepartment dep ON s.obj_id = dep.id
+        LEFT JOIN hrmsubcompany sub ON s.obj_id = sub.id
+        LEFT JOIN hrmroles ro ON s.obj_id = ro.id
+        LEFT JOIN hrmjobtitles jo ON s.obj_id = jo.id
+        WHERE 1=1
+        ORDER BY s.modify_date DESC,s.modify_time DESC,s.id DESC
+        LIMIT #{pageNum},#{pageSize}
+    </select>
+
+    <select id="blockListOracle" resultMap="appScopeMap">
+        SELECT *
+        FROM
+        (
+        SELECT data.*, ROWNUM AS rowno
+        FROM
+        (
+        SELECT s.*,hrmm.lastname manager_name,
+        (CASE WHEN obj_type = 'all' THEN '所有人'
+        WHEN obj_type = 'user' THEN hrm.lastname
+        WHEN obj_type = 'department' THEN dep.departmentmark
+        WHEN obj_type = 'subcompany' THEN sub.subcompanyname
+        WHEN obj_type = 'role' THEN ro.rolesmark
+        WHEN obj_type = 'job' THEN jo.jobtitlemark
+        ELSE NULL
+        END
+        ) AS obj_name
+        FROM cloudstore_blockcode s
+        LEFT JOIN hrmresource hrm ON s.obj_id = hrm.id
+        LEFT JOIN hrmresourcemanager hrmm ON s.obj_id = hrmm.id
+        LEFT JOIN hrmdepartment dep ON s.obj_id = dep.id
+        LEFT JOIN hrmsubcompany sub ON s.obj_id = sub.id
+        LEFT JOIN hrmroles ro ON s.obj_id = ro.id
+        LEFT JOIN hrmjobtitles jo ON s.obj_id = jo.id
+        WHERE 1=1
+        ORDER BY s.modify_date DESC,s.modify_time DESC,s.id DESC
+        ) data
+        ) temp
+        WHERE temp.rowno BETWEEN #{pageNum} AND #{pageSize}
+    </select>
+
+    <select id="blockListSqlserver" resultMap="appScopeMap">
+        SELECT top (#{pageSize}) * FROM
+        (
+        SELECT top 100 percent row_number() over
+        ( ORDER BY s.modify_date DESC,s.modify_time DESC,s.id DESC ) AS rownum,
+        s.*,hrmm.lastname manager_name,
+        (CASE WHEN obj_type = 'all' THEN '所有人'
+        WHEN obj_type = 'user' THEN hrm.lastname
+        WHEN obj_type = 'department' THEN dep.departmentmark
+        WHEN obj_type = 'subcompany' THEN sub.subcompanyname
+        WHEN obj_type = 'role' THEN ro.rolesmark
+        WHEN obj_type = 'job' THEN jo.jobtitlemark
+        ELSE NULL
+        END
+        ) AS obj_name
+        FROM cloudstore_blockcode s
+        LEFT JOIN hrmresource hrm ON s.obj_id = hrm.id
+        LEFT JOIN hrmresourcemanager hrmm ON s.obj_id = hrmm.id
+        LEFT JOIN hrmdepartment dep ON s.obj_id = dep.id
+        LEFT JOIN hrmsubcompany sub ON s.obj_id = sub.id
+        LEFT JOIN hrmroles ro ON s.obj_id = ro.id
+        LEFT JOIN hrmjobtitles jo ON s.obj_id = jo.id
+        WHERE 1=1
+        ORDER BY s.modify_date DESC,s.modify_time DESC,s.id DESC
+        ) AS temp
+        WHERE temp.rownum &gt; #{offset}
+    </select>
+
+    <select id="countScope" parameterType="com.cloudstore.dev.bean.EcodeBlock" resultType="int">
+        SELECT count(DISTINCT sc.id)
+        FROM cloudstore_blockcode sc
+        
+    </select>
+
+</mapper>

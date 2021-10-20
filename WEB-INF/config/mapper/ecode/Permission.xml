@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cloudstore.dev.api.mapper.PermissionMapper">
+
+
+    <select id="list" resultMap="resultMap1">
+    select
+    t.*,
+    (
+    case
+    when objecttype = 'user' then '人员'
+    when objecttype = 'department' then '部门'
+    when objecttype = 'role' then '角色'
+    else '其他'
+    end
+    ) as objectdesc,
+    (
+    case
+    when permission = 'readonly' then '只读'
+    when permission = 'editable' then '可编辑'
+    when permission = 'deletable' then '可删除'
+    when permission = 'configuration' then '可配置'
+    else '其他'
+    end
+    ) as permissiondesc
+    from
+    (
+    (
+    (
+    select
+    per.*,hrm.lastname as name
+    from cloudstore_permission per left join hrmresource hrm on per.objectid = hrm.id
+    where 1=1 and per.objecttype = 'user'
+    )
+    union
+    (
+    select
+    per.*,dep.departmentname as name
+    from cloudstore_permission per left join hrmdepartment dep on per.objectid = dep.id
+    where 1=1 and per.objecttype = 'department'
+    )
+    )
+    union
+    (
+    select
+    per.*,role.rolesmark as name
+    from cloudstore_permission per left join hrmroles role on per.objectid = role.id
+    where 1=1 and per.objecttype = 'role'
+    )
+    ) t
+    where 1=1
+        <if test="permission.folderId != null and permission.folderId != ''">
+            and folderid = #{permission.folderId}
+        </if>
+        <if test="permission.typeId != null and permission.typeId != ''">
+            and typeid = #{permission.typeId}
+        </if>
+	group by objectid,objecttype,permission
+    order by id desc
+    </select>
+
+    <select id="listMysql" resultMap="resultMap1">
+    select
+    t.*,
+    (
+    case
+    when objecttype = 'user' then '人员'
+    when objecttype = 'department' then '部门'
+    when objecttype = 'role' then '角色'
+    else '其他'
+    end
+    ) as objectdesc,
+    (
+    case
+    when permission = 'readonly' then '只读'
+    when permission = 'editable' then '可编辑'
+    when permission = 'deletable' then '可删除'
+    when permission = 'configuration' then '可配置'
+    else '其他'
+    end
+    ) as permissiondesc
+    from
+    (
+    (
+    (
+    select
+    per.*,hrm.lastname as name
+    from cloudstore_permission per left join hrmresource hrm on per.objectid = hrm.id
+    where 1=1 and per.objecttype = 'user'
+    )
+    union
+    (
+    select
+    per.*,dep.departmentname as name
+    from cloudstore_permission per left join hrmdepartment dep on per.objectid = dep.id
+    where 1=1 and per.objecttype = 'department'
+    )
+    )
+    union
+    (
+    select
+    per.*,role.rolesmark as name
+    from cloudstore_permission per left join hrmroles role on per.objectid = role.id
+    where 1=1 and per.objecttype = 'role'
+    )
+    ) t
+    where 1=1 and folderid = #{permission.folderId}
+	group by objectid,objecttype,permission
+    order by id desc
+    limit #{pageNum},#{pageSize}
+    </select>
+    <resultMap id="resultMap1" type="com.cloudstore.dev.bean.Permission">
+        <id column="id" property="id"></id>
+        <result column="folderid" property="folderId"></result>
+        <result column="typeid" property="typeId"></result>
+        <result column="objectid" property="objectId"></result>
+        <result column="objecttype" property="objectType"></result>
+        <result column="permission" property="permission"></result>
+        <result column="status" property="status"></result>
+        <result column="name" property="name"></result>
+        <result column="objectdesc" property="objectDesc"></result>
+        <result column="permissiondesc" property="permissionDesc"></result>
+    </resultMap>
+
+    <select id="listOracle" resultMap="resultMap1">
+
+        select *
+        from
+        (
+        select data.*, ROWNUM as rowno
+        from
+        (
+        select
+    t.*,
+    (
+    case
+    when objecttype = 'user' then '人员'
+    when objecttype = 'department' then '部门'
+    when objecttype = 'role' then '角色'
+    else '其他'
+    end
+    ) as objectdesc,
+    (
+    case
+    when permission = 'readonly' then '只读'
+    when permission = 'editable' then '可编辑'
+    when permission = 'deletable' then '可删除'
+    when permission = 'configuration' then '可配置'
+    else '其他'
+    end
+    ) as permissiondesc
+    from
+    (
+    (
+    (
+    select
+    per.*,hrm.lastname as name
+    from cloudstore_permission per left join hrmresource hrm on per.objectid = hrm.id
+    where 1=1 and per.objecttype = 'user'
+    )
+    union
+    (
+    select
+    per.*,dep.departmentname as name
+    from cloudstore_permission per left join hrmdepartment dep on per.objectid = dep.id
+    where 1=1 and per.objecttype = 'department'
+    )
+    )
+    union
+    (
+    select
+    per.*,role.rolesmark as name
+    from cloudstore_permission per left join hrmroles role on per.objectid = role.id
+    where 1=1 and per.objecttype = 'role'
+    )
+    ) t
+    where 1=1 and folderid = #{permission.folderId}
+	group by objectid,objecttype,permission
+    order by id desc
+        ) data
+        ) temp
+        where temp.rowno between #{pageNum} and #{pageSize}
+    </select>
+
+    <select id="listSqlServer" resultMap="resultMap1">
+
+        select * from
+        (
+        select top (#{pageNum}) row_number() over
+        ( ORDER BY f.modifydate desc,f.modifytime DESC ) as rownum,
+    t.*,
+    (
+    case
+    when objecttype = 'user' then '人员'
+    when objecttype = 'department' then '部门'
+    when objecttype = 'role' then '角色'
+    else '其他'
+    end
+    ) as objectdesc,
+    (
+    case
+    when permission = 'readonly' then '只读'
+    when permission = 'editable' then '可编辑'
+    when permission = 'deletable' then '可删除'
+    when permission = 'configuration' then '可配置'
+    else '其他'
+    end
+    ) as permissiondesc
+    from
+    (
+    (
+    (
+    select
+    per.*,hrm.lastname as name
+    from cloudstore_permission per left join hrmresource hrm on per.objectid = hrm.id
+    where 1=1 and per.objecttype = 'user'
+    )
+    union
+    (
+    select
+    per.*,dep.departmentname as name
+    from cloudstore_permission per left join hrmdepartment dep on per.objectid = dep.id
+    where 1=1 and per.objecttype = 'department'
+    )
+    )
+    union
+    (
+    select
+    per.*,role.rolesmark as name
+    from cloudstore_permission per left join hrmroles role on per.objectid = role.id
+    where 1=1 and per.objecttype = 'role'
+    )
+    ) t
+    where 1=1 and folderid = #{permission.folderId}
+	group by objectid,objecttype,permission
+    order by id desc
+        ) as temp
+        where temp.rownum &gt; #{pageSize}
+    </select>
+
+    <select id="count" resultType="int">
+    select
+    count(distinct objectid,objecttype,permission)
+    from cloudstore_permission
+    where 1=1 and folderid = #{folderId}
+    </select>
+
+</mapper>

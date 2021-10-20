@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cloudstore.dev.api.mapper.AppVersionMapper">
+
+
+    <select id="list" parameterType="com.cloudstore.dev.bean.AppVersion" resultMap="appMap">
+        select *
+        from cloudstore_appversion
+        where 1=1
+            <if test="appId != null and appId != ''">
+               and appid = #{appId}
+            </if>
+        order by id desc
+    </select>
+
+    <resultMap id="appMap" type="com.cloudstore.dev.bean.AppVersion">
+        <id column="id" property="id"></id>
+        <result column="appid" property="appId"></result>
+        <result column="actiontype" property="actionType"></result>
+        <result column="userid" property="userId"></result>
+        <result column="version" property="version"></result>
+        <result column="oldversion" property="oldVersion"></result>
+        <result column="content" property="content"></result>
+        <result column="clientip" property="clientIp"></result>
+        <result column="serverip" property="serverIp"></result>
+        <result column="modifydate" property="modifyDate"></result>
+        <result column="modifytime" property="modifyTime"></result>
+        <result column="status" property="status"></result>
+        <result column="lastname" property="userName"></result>
+        <result column="mlastname" property="manName"></result>
+    </resultMap>
+
+    <select id="listMysql" resultMap="appMap">
+        select app.*,hrm.lastname,hrmr.lastname as mlastname
+        from cloudstore_appversion app left join hrmresource hrm on app.userid = hrm.id left join hrmresourcemanager hrmr on app.userid = hrmr.id
+        where 1=1
+        <if test="app.appId != null and app.appId != ''">
+            and app.appid = #{app.appId}
+        </if>
+        order by id desc
+        limit #{pageNum},#{pageSize}
+    </select>
+
+    <select id="listOracle" resultMap="appMap">
+        select *
+        from
+        (
+        select data.*, ROWNUM as rowno
+        from
+        (
+            select app.*,hrm.lastname,hrmr.lastname as mlastname
+            from cloudstore_appversion app left join hrmresource hrm on app.userid = hrm.id left join hrmresourcemanager hrmr on app.userid = hrmr.id
+            where 1=1
+            <if test="app.appId != null and app.appId != ''">
+                and app.appid = #{app.appId}
+            </if>
+        ) data
+        ) temp
+        where temp.rowno between #{pageNum} and #{pageSize}
+    </select>
+
+    <select id="listSqlServer" resultMap="appMap">
+        select top (#{pageSize}) * from
+        (
+        select top 100 percent row_number() over
+        ( ORDER BY id DESC ) as rownum,
+        t.*,
+        (
+            select app.*,hrm.lastname,hrmr.lastname as mlastname
+            from cloudstore_appversion app left join hrmresource hrm on app.userid = hrm.id left join hrmresourcemanager hrmr on app.userid = hrmr.id
+            where 1=1
+            <if test="app.appId != null and app.appId != ''">
+                and app.appid = #{app.appId}
+            </if>
+            order by id desc
+        ) t
+        ) as temp
+        where temp.rownum &gt; #{offset}
+    </select>
+
+    <select id="count" parameterType="com.cloudstore.dev.bean.AppVersion" resultType="int">
+        select count(1) from cloudstore_appversion
+        where 1=1
+        <if test="appId != null and appId != ''">
+            and appid = #{appId}
+        </if>
+    </select>
+
+    <select id="authList" parameterType="com.cloudstore.dev.bean.Authorized" resultMap="authMap">
+        select * from cloudstore_authorized
+        where effective = 'y'
+        and (
+        realappid like concat(concat('%', #{realAppId}), '%')
+        or
+        authappid like concat(concat('%', #{realAppId}), '%')
+        )
+    </select>
+
+    <select id="authListSqlServer" parameterType="com.cloudstore.dev.bean.Authorized" resultMap="authMap">
+        select * from cloudstore_authorized
+        where effective = 'y' and realappid like '%' + #{realAppId} + '%'
+    </select>
+    <resultMap id="authMap" type="com.cloudstore.dev.bean.Authorized">
+        <id column="id" property="id"></id>
+        <result column="authappid" property="authAppId"></result>
+        <result column="realappid" property="realAppId"></result>
+        <result column="authtype" property="authType"></result>
+        <result column="authcode" property="authCode"></result>
+        <result column="cloudaccount" property="cloudAccount"></result>
+        <result column="createdate" property="createDate"></result>
+        <result column="createtime" property="createTime"></result>
+        <result column="effective" property="effective"></result>
+        <result column="status" property="status"></result>
+    </resultMap>
+
+    <!--<select id="authListByAppId" parameterType="com.cloudstore.dev.bean.Authorized" resultMap="authMap">
+        <if test="list != null and list.size() > 0 ">
+        select * from cloudstore_authorized a
+        where a.effective = 'y'
+                <foreach collection="list" item="list" separator="," open="(" close=")">
+                    and a.realappid like concat(concat('%', #{list}) , '%')
+                </foreach>
+        </if>
+    </select>
+
+    <select id="authListByAppIdSqlServer" parameterType="com.cloudstore.dev.bean.Authorized" resultMap="authMap">
+
+        <if test="list != null and list.size() > 0 ">
+        select * from cloudstore_authorized a
+        where a.effective = 'y'
+                <foreach collection="list" item="list" separator="," open="(" close=")">
+                    and a.realappid like '%' + #{list} + '%'
+                </foreach>
+        </if>
+    </select>-->
+
+
+
+
+</mapper>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cloudstore.dev.api.mapper.EcodeResourceMapper">
+
+    <update id="batchUpdateAttach" parameterType="com.cloudstore.dev.bean.EcodeResource">
+        <if test="list.size > 0">
+            update cloudstore_resource
+            set attachid =
+            <foreach collection="list" index="index" item="item" open="case id" close="end" separator=" ">
+                when #{item.id}
+                then #{item.attachId}
+            </foreach>
+            where id in
+            <foreach collection="list" index="index" item="item" open="(" close=")" separator=",">
+                #{item.id}
+            </foreach>
+        </if>
+    </update>
+
+
+    <insert id="batchInsertSegment" parameterType="com.cloudstore.dev.bean.EcodeResource">
+        <if test="list.size > 0">
+            insert into cloudstore_resource
+            (
+            id,
+            parentid,
+            attachid,
+            filesize,
+            name,
+            extension,
+            flownum,
+            category,
+            route,
+            shownum,
+            creater,
+            deleted,
+            status,
+            createdate,
+            createtime,
+            modifydate,
+            modifytime,
+            originid
+            )
+            values
+            <foreach collection="list" item="item" separator=",">
+                (
+                #{item.id},
+                #{item.parentId},
+                #{item.attachId},
+                #{item.fileSize},
+                #{item.name},
+                #{item.extension},
+                #{item.flowNum},
+                #{item.category},
+                #{item.route},
+                #{item.showNum},
+                #{item.userId},
+                #{item.deleted},
+                #{item.status},
+                #{item.createDate},
+                #{item.createTime},
+                #{item.modifyDate},
+                #{item.modifyTime},
+                #{item.originId}
+                )
+            </foreach>
+        </if>
+    </insert>
+
+</mapper>

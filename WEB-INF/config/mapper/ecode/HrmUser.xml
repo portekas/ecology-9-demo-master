@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cloudstore.dev.api.mapper.HrmUserMapper">
+
+    <select id="listMysql" resultMap="resultMap1">
+      select id,lastname from hrmresource
+      <where>
+          1=1
+          <if test="name != null and name != ''">
+              and lastname like concat(concat('%', #{name}), '%')
+          </if>
+          and status in (0,1,2,3)
+      </where>
+      limit #{pageNum},#{pageSize}
+    </select>
+    <resultMap id="resultMap1" type="com.cloudstore.dev.bean.HrmUser">
+        <result column="id" property="uid"></result>
+        <result column="lastname" property="lastname"></result>
+    </resultMap>
+
+    <select id="listOracle" resultMap="resultMap1">
+
+        select *
+        from
+        (
+        select data.*, ROWNUM as rowno
+        from
+        (
+        select
+        u.id,u.lastname
+        from hrmresource u
+        <where>
+            1=1
+            <if test="name != null and name != ''">
+                and u.lastname like concat(concat('%', #{name}), '%')
+            </if>
+            and u.status in (0,1,2,3)
+        </where>
+        order by u.id desc
+        ) data
+        ) temp
+        where temp.rowno between #{pageNum} and #{pageSize}
+    </select>
+
+    <select id="listSqlServer" resultMap="resultMap1">
+
+        select top (#{pageSize}) * from
+        (
+        select top 100 percent row_number() over
+        ( ORDER BY role.id desc ) as rownum,
+        role.id,role.lastname
+        from hrmresource role
+        <where>
+            1=1
+            <if test="name != null and name != ''">
+                and role.lastname like '%' + #{name} + '%'
+            </if>
+            and role.status in (0,1,2,3)
+        </where>
+        order by role.id desc
+        ) as temp
+        where temp.rownum &gt; #{offset}
+    </select>
+
+    <select id="count" resultType="int">
+        select
+        count(distinct role.id)
+        from hrmresource role
+        <where>
+            1=1
+            <if test="name != null and name != ''">
+                and role.lastname like concat(concat('%', #{name}), '%')
+            </if>
+            and role.status in (0,1,2,3)
+        </where>
+
+    </select>
+
+    <select id="countSql" resultType="int">
+        select
+        count(distinct role.id)
+        from hrmresource role
+        <where>
+            1=1
+            <if test="name != null and name != ''">
+                and role.lastname like '%' + #{name} + '%'
+            </if>
+            and role.status in (0,1,2,3)
+        </where>
+
+    </select>
+
+</mapper>

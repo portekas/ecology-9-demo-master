@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cloudstore.dev.api.mapper.FolderLogMapper">
+
+    <select id="listMysql" resultMap="resultMap1">
+        select
+        log.*,
+        concat(concat(log.modifydate, ' '), log.modifytime) as modTime
+        from cloudstore_folderversion log
+        where 1=1
+        <if test="folder.objecttype != null and folder.objecttype != ''">
+            and log.objecttype = #{folder.objecttype}
+        </if>
+        <if test="folder.folderid != null and folder.folderid != ''">
+            and log.folderid = #{folder.folderid}
+        </if>
+        <if test="folder.operatetype != null and folder.operatetype != ''">
+            and log.operatetype = #{folder.operatetype}
+        </if>
+        <if test="folder.modifydate != null and folder.modifydate != ''">
+            and log.modifydate &gt;= #{folder.createdate} and log.modifydate &lt;= #{folder.modifydate}
+        </if>
+        order by log.modifydate desc,log.modifytime desc,log.id desc
+        limit #{pageNum},#{pageSize}
+    </select>
+    <resultMap id="resultMap1" type="com.cloudstore.dev.bean.ReleaseLog">
+        <id column="id" property="id"></id>
+        <id column="parentid" property="parentId"></id>
+        <id column="userid" property="userid"></id>
+        <id column="folderid" property="folderId"></id>
+        <id column="datakey" property="dataKey"></id>
+        <id column="objecttype" property="objectType"></id>
+        <id column="operatetype" property="operateType"></id>
+        <id column="originname" property="originName"></id>
+        <id column="newname" property="newName"></id>
+        <id column="origincontent" property="originContent"></id>
+        <id column="newcontent" property="newContent"></id>
+        <id column="version" property="version"></id>
+        <id column="lastversion" property="lastVersion"></id>
+        <id column="status" property="status"></id>
+        <id column="modTime" property="modTime"></id>
+    </resultMap>
+
+    <select id="listOracle" resultMap="resultMap1">
+
+        select * from (
+        select data.*, ROWNUM as rowno from (
+        select
+        log.*,
+        concat(concat(log.modifydate, ' '), log.modifytime) as modTime
+        from cloudstore_folderversion log
+        where 1=1
+        <if test="folder.objecttype != null and folder.objecttype != ''">
+            and log.objecttype = #{folder.objecttype}
+        </if>
+        <if test="folder.folderid != null and folder.folderid != ''">
+            and log.folderid = #{folder.folderid}
+        </if>
+        <if test="folder.operatetype != null and folder.operatetype != ''">
+            and log.operatetype = #{folder.operatetype}
+        </if>
+        <if test="folder.modifydate != null and folder.modifydate != ''">
+            and log.modifydate &gt;= #{folder.createdate} and log.modifydate &lt;= #{folder.modifydate}
+        </if>
+        ) data
+        ) temp
+        where temp.rowno between #{pageNum} and #{pageSize}
+        order by modifydate desc,modifytime desc,id desc
+
+    </select>
+
+    <select id="listSqlServer" resultMap="resultMap1">
+
+        select top (#{pageSize}) * from (
+        select top 100 percent row_number() over
+        ( ORDER BY log.modifydate desc,log.modifytime DESC ) as rownum,
+        log.*,
+        log.modifydate + ' ' + log.modifytime as modTime
+        from cloudstore_folderversion log
+        where 1=1
+        <if test="folder.objecttype != null and folder.objecttype != ''">
+            and log.objecttype = #{folder.objecttype}
+        </if>
+        <if test="folder.folderid != null and folder.folderid != ''">
+            and log.folderid = #{folder.folderid}
+        </if>
+        <if test="folder.operatetype != null and folder.operatetype != ''">
+            and log.operatetype = #{folder.operatetype}
+        </if>
+        <if test="folder.modifydate != null and folder.modifydate != ''">
+            and log.modifydate &gt;= #{folder.createdate} and log.modifydate &lt;= #{folder.modifydate}
+        </if>
+        ) as temp
+        where temp.rownum &gt; #{offset}
+
+    </select>
+
+    <select id="count" resultType="int">
+        select
+        count(1)
+        from cloudstore_folderversion log
+        where 1=1
+        <if test="folder.objecttype != null and folder.objecttype != ''">
+            and log.objecttype = #{folder.objecttype}
+        </if>
+        <if test="folder.folderid != null and folder.folderid != ''">
+            and log.folderid = #{folder.folderid}
+        </if>
+        <if test="folder.operatetype != null and folder.operatetype != ''">
+            and log.operatetype = #{folder.operatetype}
+        </if>
+        <if test="folder.modifydate != null and folder.modifydate != ''">
+            and log.modifydate &gt;= #{folder.createdate} and log.modifydate &lt;= #{folder.modifydate}
+        </if>
+
+    </select>
+
+</mapper>

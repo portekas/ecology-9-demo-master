@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cloudstore.dev.api.mapper.ReleasePathMapper">
+
+    <select id="list" resultMap="listMap">
+        SELECT cl.*,ft.name,ft.flownum
+        FROM cloudstore_customrelease cl
+        LEFT JOIN cloudstore_foldertype ft ON cl.roottype = ft.id
+        WHERE ft.deleted = 0
+        <if test="key != null and key != ''">
+            AND (ft.name LIKE concat(concat('%', #{key}), '%') or cl.path LIKE concat(concat('%', #{key}), '%') or ft.id = #{key})
+        </if>
+        ORDER BY cl.create_date DESC,cl.create_time DESC,id DESC
+    </select>
+    <resultMap id="listMap" type="com.cloudstore.dev.bean.ReleasePath">
+        <id column="id" property="id"></id>
+        <result column="path" property="path"></result>
+        <result column="name" property="rootTypeName"></result>
+        <result column="flownum" property="flownum"></result>
+        <result column="roottype" property="rootType"></result>
+        <result column="rootfolder" property="rootFolder"></result>
+    </resultMap>
+    <select id="listSqlserver" resultMap="listMap">
+        SELECT cl.*,ft.name,ft.flownum
+        FROM cloudstore_customrelease cl
+        LEFT JOIN cloudstore_foldertype ft ON cl.roottype = ft.id
+        WHERE ft.deleted = 0
+        <if test="key != null and key != ''">
+            AND (ft.name LIKE '%' + #{key} + '%' or cl.path LIKE '%' + #{key} + '%' or ft.id = #{key})
+        </if>
+        ORDER BY cl.create_date DESC,cl.create_time DESC,id DESC
+    </select>
+
+</mapper>

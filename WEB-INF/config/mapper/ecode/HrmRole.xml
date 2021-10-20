@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cloudstore.dev.api.mapper.HrmRoleMapper">
+
+    <select id="listMysql" resultMap="resultMap1">
+    select
+    role.id,role.rolesmark
+    from hrmroles role
+    left join systemrightroles sr on sr.roleid = role.id
+    <where>
+        <if test="role.rightId != null and role.rightId gt 0 ">
+            and sr.rightid = #{role.rightId}
+        </if>
+        <if test="role.roleId != null and role.roleId != ''">
+            and sr.roleid = #{role.roleId}
+        </if>
+        <if test="role.rolesMark != null and role.rolesMark != ''">
+            and role.rolesmark like concat(concat('%', #{role.rolesMark}), '%')
+        </if>
+    </where>
+    group by id
+    order by id desc
+    limit #{pageNum},#{pageSize}
+    </select>
+    <resultMap id="resultMap1" type="com.cloudstore.dev.bean.HrmRole">
+        <result column="id" property="roleId"></result>
+        <result column="rolesmark" property="rolesMark"></result>
+    </resultMap>
+
+    <select id="listOracle" resultMap="resultMap1">
+
+        select *
+        from
+        (
+        select data.*, ROWNUM as rowno
+        from
+        (
+        select
+        role.id,role.rolesmark
+        from hrmroles role
+        left join systemrightroles sr on sr.roleid = role.id
+        <where>
+            <if test="role.rightId != null and role.rightId gt 0 ">
+                and sr.rightid = #{role.rightId}
+            </if>
+            <if test="role.roleId != null and role.roleId != ''">
+                and sr.roleid = #{role.roleId}
+            </if>
+            <if test="role.rolesMark != null and role.rolesMark != ''">
+                and role.rolesmark like concat(concat('%', #{role.rolesMark}), '%')
+            </if>
+        </where>
+        group by role.id,role.rolesmark
+        order by role.id desc
+        ) data
+        ) temp
+        where temp.rowno between #{pageNum} and #{pageSize}
+    </select>
+
+    <select id="listSqlServer" resultMap="resultMap1">
+
+        select top (#{pageSize}) * from
+        (
+        select top 100 percent row_number() over
+        ( ORDER BY role.id desc ) as rownum,
+        role.id,role.rolesmark
+        from hrmroles role
+        left join systemrightroles sr on sr.roleid = role.id
+        <where>
+            <if test="role.rightId != null and role.rightId gt 0 ">
+                and sr.rightid = #{role.rightId}
+            </if>
+            <if test="role.roleId != null and role.roleId != ''">
+                and sr.roleid = #{role.roleId}
+            </if>
+            <if test="role.rolesMark != null and role.rolesMark != ''">
+                and role.rolesmark like '%' + #{role.rolesMark} + '%'
+            </if>
+        </where>
+        group by role.id,role.rolesmark
+        order by role.id desc
+        ) as temp
+        where temp.rownum &gt; #{offset}
+    </select>
+
+    <select id="count" resultType="int">
+        select
+        count(distinct role.id)
+        from hrmroles role
+        left join systemrightroles sr on sr.roleid = role.id
+        <where>
+            <if test="role.rightId != null and role.rightId gt 0 ">
+                and sr.rightid = #{role.rightId}
+            </if>
+            <if test="role.roleId != null and role.roleId != ''">
+                and sr.roleid = #{role.roleId}
+            </if>
+            <if test="role.rolesMark != null and role.rolesMark != ''">
+                and role.rolesmark like concat(concat('%', #{role.rolesMark}), '%')
+            </if>
+        </where>
+
+    </select>
+
+    <select id="countSql" resultType="int">
+        select
+        count(distinct role.id)
+        from hrmroles role
+        left join systemrightroles sr on sr.roleid = role.id
+        <where>
+            <if test="role.rightId != null and role.rightId gt 0 ">
+                and sr.rightid = #{role.rightId}
+            </if>
+            <if test="role.roleId != null and role.roleId != ''">
+                and sr.roleid = #{role.roleId}
+            </if>
+            <if test="role.rolesMark != null and role.rolesMark != ''">
+                and role.rolesmark like '%' + #{role.rolesMark} + '%'
+            </if>
+        </where>
+
+    </select>
+
+</mapper>

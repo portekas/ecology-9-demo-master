@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cloudstore.dev.api.mapper.EdesignMapper">
+
+    <resultMap id="appMap" type="com.cloudstore.dev.bean.EdesignAppVersion">
+        <id column="id" property="id"></id>
+        <result column="main_id" property="mainId"></result>
+        <result column="app_id" property="appId"></result>
+        <result column="user_id" property="userId"></result>
+        <result column="version" property="version"></result>
+        <result column="code_json" property="codeJson"></result>
+        <result column="name" property="name"></result>
+        <result column="client_ip" property="clientIp"></result>
+        <result column="description" property="description"></result>
+        <result column="modify_date" property="modifyDate"></result>
+        <result column="modify_time" property="modifyTime"></result>
+        <result column="user_name" property="userName"></result>
+    </resultMap>
+
+    <select id="versionListMysql" resultMap="appMap">
+        SELECT cev.*,(CASE WHEN hrm.lastname IS NULL THEN hrmm.lastname ELSE hrm.lastname END) user_name
+        FROM cloudstore_edesign_version cev
+        LEFT JOIN hrmresource hrm ON cev.user_id = hrm.id
+        LEFT JOIN hrmresourcemanager hrmm ON cev.user_id = hrmm.id
+        WHERE cev.main_id = #{app.mainId}
+        <if test="app.description != null and app.description != ''">
+            AND cev.description LIKE concat(concat('%', #{app.description}), '%')
+        </if>
+        <if test="app.modifyDate != null and app.modifyDate != '' and app.modifyTime != null and app.modifyTime != '' ">
+            AND cev.modify_date &gt;= #{app.modifyDate} AND cev.modify_date &lt;= #{app.modifyTime}
+        </if>
+        <if test="app.userId != null and app.userId gt 0 ">
+            AND cev.user_id = #{app.userId}
+        </if>
+        <if test="app.version != null and app.version gt 0 ">
+            AND cev.version = #{app.version}
+        </if>
+        <if test="app.userIds != null and app.userIds.size() > 0">
+            AND cev.user_id IN
+            <foreach collection="app.userIds" item="id" separator="," open="(" close=")">
+                #{id}
+            </foreach>
+        </if>
+        ORDER BY version DESC
+        LIMIT #{pageNum},#{pageSize}
+    </select>
+
+    <select id="versionListOracle" resultMap="appMap">
+        select *
+        FROM
+        (
+        select data.*, ROWNUM as rowno
+        from
+        (
+        select cev.*,(case when hrm.lastname is null then hrmm.lastname else hrm.lastname end) user_name
+        FROM cloudstore_edesign_version cev
+        LEFT JOIN hrmresource hrm on cev.user_id = hrm.id
+        LEFT JOIN hrmresourcemanager hrmm on cev.user_id = hrmm.id
+        where cev.main_id = #{app.mainId}
+        <if test="app.description != null and app.description != ''">
+            and cev.description like concat(concat('%', #{app.description}), '%')
+        </if>
+        <if test="app.modifyDate != null and app.modifyDate != '' and app.modifyTime != null and app.modifyTime != '' ">
+            and cev.modify_date &gt;= #{app.modifyDate} and cev.modify_date &lt;= #{app.modifyTime}
+        </if>
+        <if test="app.userId != null and app.userId gt 0 ">
+            and cev.user_id = #{app.userId}
+        </if>
+        <if test="app.version != null and app.version gt 0 ">
+            and cev.version = #{app.version}
+        </if>
+        <if test="app.userIds != null and app.userIds.size() > 0">
+            AND cev.user_id IN
+            <foreach collection="app.userIds" item="id" separator="," open="(" close=")">
+                #{id}
+            </foreach>
+        </if>
+        ORDER BY version desc
+        ) data
+        ) temp
+        where temp.rowno between #{pageNum} and #{pageSize}
+    </select>
+
+    <select id="versionListSqlserver" resultMap="appMap">
+        select top (#{pageSize}) * from
+        (
+        select top 100 percent row_number() over
+        ( ORDER BY cev.version DESC ) as rownum,
+        cev.*,(case when hrm.lastname is null then hrmm.lastname else hrm.lastname end) user_name
+        FROM cloudstore_edesign_version cev
+        LEFT JOIN hrmresource hrm on cev.user_id = hrm.id
+        LEFT JOIN hrmresourcemanager hrmm on cev.user_id = hrmm.id
+        where cev.main_id = #{app.mainId}
+        <if test="app.description != null and app.description != ''">
+            and cev.description like '%' + #{app.description} + '%'
+        </if>
+        <if test="app.modifyDate != null and app.modifyDate != '' and app.modifyTime != null and app.modifyTime != '' ">
+            and cev.modify_date &gt;= #{app.modifyDate} and cev.modify_date &lt;= #{app.modifyTime}
+        </if>
+        <if test="app.userId != null and app.userId gt 0 ">
+            and cev.user_id = #{app.userId}
+        </if>
+        <if test="app.version != null and app.version gt 0 ">
+            and cev.version = #{app.version}
+        </if>
+        <if test="app.userIds != null and app.userIds.size() > 0">
+            AND cev.user_id IN
+            <foreach collection="app.userIds" item="id" separator="," open="(" close=")">
+                #{id}
+            </foreach>
+        </if>
+        ORDER BY version desc
+        ) as temp
+        where temp.rownum &gt; #{offset}
+    </select>
+
+    <select id="countVersion" parameterType="com.cloudstore.dev.bean.EdesignAppVersion" resultType="int">
+        select count(1)
+        FROM cloudstore_edesign_version cev
+        where cev.main_id = #{mainId}
+        <if test="description != null and description != ''">
+            and cev.description like concat(concat('%', #{description}), '%'))
+        </if>
+        <if test="modifyDate != null and modifyDate != '' and modifyTime != null and modifyTime != '' ">
+            and cev.modify_date &gt;= #{modifyDate} and cev.modify_date &lt;= #{modifyTime}
+        </if>
+        <if test="userId != null and userId gt 0 ">
+            and cev.user_id = #{userId}
+        </if>
+        <if test="version != null and version gt 0 ">
+            and cev.version = #{version}
+        </if>
+        <if test="userIds != null and userIds.size() > 0">
+            AND cev.user_id IN
+            <foreach collection="userIds" item="id" separator="," open="(" close=")">
+                #{id}
+            </foreach>
+        </if>
+    </select>
+
+    <resultMap id="appScopeMap" type="com.cloudstore.dev.bean.EdesignAppScope">
+        <id column="id" property="id"></id>
+        <result column="main_id" property="mainId"></result>
+        <result column="app_id" property="appId"></result>
+        <result column="user_id" property="userId"></result>
+        <result column="obj_id" property="objId"></result>
+        <result column="obj_type" property="objType"></result>
+        <result column="obj_name" property="objName"></result>
+        <result column="manager_name" property="managerName"></result>
+        <result column="include_subordinate" property="includeSubordinate"></result>
+        <result column="sec_level_min" property="secLevelMin"></result>
+        <result column="sec_level_max" property="secLevelMax"></result>
+        <result column="role_job_level" property="roleJobLevel"></result>
+        <result column="job_dep_sub_id" property="jobDepSubId"></result>
+        <result column="job_dep_sub_name" property="jobDepSubName"></result>
+        <result column="modify_date" property="modifyDate"></result>
+        <result column="modify_time" property="modifyTime"></result>
+    </resultMap>
+
+    <select id="scopeListMysql" resultMap="appScopeMap">
+        select distinct s.*,hrmm.lastname manager_name,
+                (case when obj_type = 'all' then '所有人'
+                when obj_type = 'user' then hrm.lastname
+                when obj_type = 'department' then dep.departmentmark
+                when obj_type = 'subcompany' then sub.subcompanyname
+                when obj_type = 'role' then ro.rolesmark
+                when obj_type = 'job' then jo.jobtitlemark
+                else null
+                end
+                ) as obj_name
+                FROM cloudstore_edesign_scope s
+                LEFT JOIN hrmresource hrm ON s.obj_id = hrm.id
+                LEFT JOIN hrmresourcemanager hrmm ON s.obj_id = hrmm.id
+                LEFT JOIN hrmdepartment dep ON s.obj_id = dep.id
+                LEFT JOIN hrmsubcompany sub ON s.obj_id = sub.id
+                LEFT JOIN hrmroles ro ON s.obj_id = ro.id
+                LEFT JOIN hrmjobtitles jo ON s.obj_id = jo.id
+                WHERE s.app_id = #{app.appId}
+                ORDER BY s.modify_date DESC,s.modify_time DESC,s.id DESC
+        LIMIT #{pageNum},#{pageSize}
+    </select>
+
+    <select id="scopeListOracle" resultMap="appScopeMap">
+        SELECT *
+        FROM
+        (
+        SELECT data.*, ROWNUM AS rowno
+        FROM
+        (
+         SELECT s.*,hrmm.lastname manager_name,
+                (CASE WHEN obj_type = 'all' THEN '所有人'
+                WHEN obj_type = 'user' THEN hrm.lastname
+                WHEN obj_type = 'department' THEN dep.departmentmark
+                WHEN obj_type = 'subcompany' THEN sub.subcompanyname
+                WHEN obj_type = 'role' THEN ro.rolesmark
+                WHEN obj_type = 'job' THEN jo.jobtitlemark
+                ELSE NULL
+                END
+                ) AS obj_name
+                FROM cloudstore_edesign_scope s
+                LEFT JOIN hrmresource hrm ON s.obj_id = hrm.id
+                LEFT JOIN hrmresourcemanager hrmm ON s.obj_id = hrmm.id
+                LEFT JOIN hrmdepartment dep ON s.obj_id = dep.id
+                LEFT JOIN hrmsubcompany sub ON s.obj_id = sub.id
+                LEFT JOIN hrmroles ro ON s.obj_id = ro.id
+                LEFT JOIN hrmjobtitles jo ON s.obj_id = jo.id
+                WHERE s.app_id = #{app.appId}
+                ORDER BY s.modify_date DESC,s.modify_time DESC,s.id DESC
+        ) data
+        ) temp
+        WHERE temp.rowno BETWEEN #{pageNum} AND #{pageSize}
+    </select>
+
+    <select id="scopeListSqlserver" resultMap="appScopeMap">
+        SELECT top (#{pageSize}) * FROM
+        (
+        SELECT top 100 percent row_number() over
+        ( ORDER BY s.modify_date DESC,s.modify_time DESC,s.id DESC ) AS rownum,
+        s.*,hrmm.lastname manager_name,
+                (CASE WHEN obj_type = 'all' THEN '所有人'
+                WHEN obj_type = 'user' THEN hrm.lastname
+                WHEN obj_type = 'department' THEN dep.departmentmark
+                WHEN obj_type = 'subcompany' THEN sub.subcompanyname
+                WHEN obj_type = 'role' THEN ro.rolesmark
+                WHEN obj_type = 'job' THEN jo.jobtitlemark
+                ELSE NULL
+                END
+                ) AS obj_name
+                FROM cloudstore_edesign_scope s
+                LEFT JOIN hrmresource hrm ON s.obj_id = hrm.id
+                LEFT JOIN hrmresourcemanager hrmm ON s.obj_id = hrmm.id
+                LEFT JOIN hrmdepartment dep ON s.obj_id = dep.id
+                LEFT JOIN hrmsubcompany sub ON s.obj_id = sub.id
+                LEFT JOIN hrmroles ro ON s.obj_id = ro.id
+                LEFT JOIN hrmjobtitles jo ON s.obj_id = jo.id
+                WHERE s.app_id = #{app.appId}
+                ORDER BY s.modify_date DESC,s.modify_time DESC,s.id DESC
+        ) AS temp
+        WHERE temp.rownum &gt; #{offset}
+    </select>
+
+    <select id="countScope" parameterType="com.cloudstore.dev.bean.EdesignAppScope" resultType="int">
+        SELECT count(DISTINCT sc.id)
+        FROM cloudstore_edesign_scope sc
+        WHERE app_id = #{appId}
+    </select>
+
+
+
+    <resultMap id="logMap" type="com.cloudstore.dev.bean.EdesignAppLog">
+        <id column="id" property="id"></id>
+        <result column="main_id" property="mainId"></result>
+        <result column="app_id" property="appId"></result>
+        <result column="obj_id" property="objId"></result>
+        <result column="user_name" property="userName"></result>
+        <result column="obj_type" property="objType"></result>
+        <result column="client_ip" property="clientIp"></result>
+        <result column="operate_type" property="operateType"></result>
+        <result column="origin_content" property="originContent"></result>
+        <result column="new_content" property="newContent"></result>
+        <result column="modify_date" property="modifyDate"></result>
+        <result column="modify_time" property="modifyTime"></result>
+    </resultMap>
+
+    <select id="logListMysql" resultMap="logMap">
+        SELECT log.*,(CASE WHEN hrm.lastname IS NULL THEN hrmm.lastname ELSE hrm.lastname END) user_name
+        FROM cloudstore_edesign_log log
+        LEFT JOIN hrmresource hrm ON log.obj_id = hrm.id
+        LEFT JOIN hrmresourcemanager hrmm ON log.obj_id = hrmm.id
+        WHERE log.main_id = #{app.mainId}
+        <if test="app.objId != null and app.objId gt 0 ">
+            AND log.obj_id = #{app.objId}
+        </if>
+        <if test="app.departmentId != null and app.departmentId gt 0 ">
+            AND hrm.departmentid = #{app.departmentId}
+        </if>
+        <if test="app.subcompanyId != null and app.subcompanyId gt 0 ">
+            AND hrm.subcompanyid1 = #{app.subcompanyId}
+        </if>
+        <if test="app.modifyDate != null and app.modifyDate != '' and app.modifyTime != null and app.modifyTime != '' ">
+            AND log.modify_date BETWEEN #{app.modifyDate} AND #{app.modifyTime}
+        </if>
+        ORDER BY modify_date DESC,modify_time DESC,id DESC
+        LIMIT #{pageNum},#{pageSize}
+    </select>
+
+    <select id="logListOracle" resultMap="logMap">
+        select *
+        from
+        (
+        select data.*, ROWNUM as rowno
+        from
+        (
+        select log.*,(case when hrm.lastname is null then hrmm.lastname else hrm.lastname end) user_name
+        FROM cloudstore_edesign_log log
+        LEFT JOIN hrmresource hrm on log.obj_id = hrm.id
+        LEFT JOIN hrmresourcemanager hrmm on log.obj_id = hrmm.id
+        where log.main_id = #{app.mainId}
+        <if test="app.objId != null and app.objId gt 0 ">
+            and log.obj_id = #{app.objId}
+        </if>
+        <if test="app.departmentId != null and app.departmentId gt 0 ">
+            and hrm.departmentid = #{app.departmentId}
+        </if>
+        <if test="app.subcompanyId != null and app.subcompanyId gt 0 ">
+            and hrm.subcompanyid1 = #{app.subcompanyId}
+        </if>
+        <if test="app.modifyDate != null and app.modifyDate != '' and app.modifyTime != null and app.modifyTime != '' ">
+            and log.modify_date between #{app.modifyDate} and #{app.modifyTime}
+        </if>
+        ORDER BY modify_date desc,modify_time desc,id desc
+        ) data
+        ) temp
+        where temp.rowno between #{pageNum} and #{pageSize}
+    </select>
+
+    <select id="logListSqlserver" resultMap="logMap">
+        select top (#{pageSize}) * from
+        (
+        select top 100 percent row_number() over
+        ( ORDER BY log.id DESC ) as rownum,
+        log.*,(case when hrm.lastname is null then hrmm.lastname else hrm.lastname end) user_name
+        FROM cloudstore_edesign_log log
+        LEFT JOIN hrmresource hrm on log.obj_id = hrm.id
+        LEFT JOIN hrmresourcemanager hrmm on log.obj_id = hrmm.id
+        where log.main_id = #{app.mainId}
+        <if test="app.objId != null and app.objId gt 0 ">
+            and log.obj_id = #{app.objId}
+        </if>
+        <if test="app.departmentId != null and app.departmentId gt 0 ">
+            and hrm.departmentid = #{app.departmentId}
+        </if>
+        <if test="app.subcompanyId != null and app.subcompanyId gt 0 ">
+            and hrm.subcompanyid1 = #{app.subcompanyId}
+        </if>
+        <if test="app.modifyDate != null and app.modifyDate != '' and app.modifyTime != null and app.modifyTime != '' ">
+            and log.modify_date between #{app.modifyDate} and #{app.modifyTime}
+        </if>
+        ORDER BY modify_date desc,modify_time desc,id desc
+        ) as temp
+        where temp.rownum &gt; #{offset}
+    </select>
+
+    <select id="countLog" parameterType="com.cloudstore.dev.bean.EdesignAppLog" resultType="int">
+        select count(1)
+        FROM cloudstore_edesign_log log
+        LEFT JOIN hrmresource hrm ON log.obj_id = hrm.id
+        LEFT JOIN hrmresourcemanager hrmm ON log.obj_id = hrmm.id
+        where log.main_id = #{mainId}
+        <if test="objId != null and objId gt 0 ">
+            and log.obj_id = #{objId}
+        </if>
+        <if test="departmentId != null and departmentId gt 0 ">
+            and hrm.departmentid = #{departmentId}
+        </if>
+        <if test="subcompanyId != null and subcompanyId gt 0 ">
+            and hrm.subcompanyid1 = #{subcompanyId}
+        </if>
+        <if test="modifyDate != null and modifyDate != '' and modifyTime != null and modifyTime != '' ">
+            and log.modify_date between #{modifyDate} and #{modifyTime}
+        </if>
+    </select>
+
+
+</mapper>

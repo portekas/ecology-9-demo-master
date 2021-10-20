@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cloudstore.dev.api.mapper.EcodeSearchMapper">
+
+
+    <select id="searchCode" resultMap="searchMap">
+        SELECT
+        cc.id,cc.state,cc.folderid as parentfolder,
+        cc.name,cc.flownum,
+        sc.content,
+        cf.id AS appid,cf.foldertype
+        FROM cloudstore_sourcecode sc
+        LEFT JOIN cloudstore_codesegment cc ON sc.id = cc.attachmentid
+        LEFT JOIN cloudstore_codefolder cf ON cc.rootfolder = cf.id
+        WHERE cc.deleted = 0
+        AND cf.deleted = 0
+        AND ((cf.grand = 'n') OR (cc.fileextension = 'md') OR (cc.folderid = cc.rootfolder and cc.state = 'pre-state') OR (cf.grand = 'y' AND cf.develop = 'y'))
+        AND sc.content LIKE concat(concat('%', #{key}) , '%')
+        ORDER BY cf.createdate DESC,cf.createtime DESC,cc.modifydate DESC,cc.modifytime DESC,id DESC
+    </select>
+    <resultMap id="searchMap" type="com.cloudstore.dev.bean.EcodeSearch">
+        <id column="id" property="id"></id>
+        <result column="name" property="name"></result>
+        <result column="flownum" property="flowNum"></result>
+        <result column="state" property="state"></result>
+        <result column="content" property="content"></result>
+        <result column="appid" property="appId"></result>
+        <result column="parentfolder" property="parentFolder"></result>
+        <result column="foldertype" property="typeId"></result>
+    </resultMap>
+
+    <select id="searchCodeSqlServer" resultMap="searchMap">
+        SELECT
+        cc.id,cc.state,cc.folderid as parentfolder,
+        cc.name,cc.flownum,
+        sc.content,
+        cf.id AS appid,cf.foldertype
+        FROM cloudstore_sourcecode sc
+        LEFT JOIN cloudstore_codesegment cc ON sc.id = cc.attachmentid
+        LEFT JOIN cloudstore_codefolder cf ON cc.rootfolder = cf.id
+        WHERE cc.deleted = 0
+        AND cf.deleted = 0
+        AND ((cf.grand = 'n') OR (cc.fileextension = 'md') OR (cc.folderid = cc.rootfolder and cc.state = 'pre-state') OR (cf.grand = 'y' AND cf.develop = 'y'))
+        AND sc.content LIKE '%' + #{key} + '%'
+        ORDER BY cf.createdate DESC,cf.createtime DESC,cc.modifydate DESC,cc.modifytime DESC,id DESC
+
+    </select>
+
+    <select id="searchType" resultMap="searchTypeMap">
+        SELECT
+        ft.id,ft.name,ft.flownum,ft.parentid
+        FROM cloudstore_foldertype ft
+        WHERE ft.deleted = 0
+        AND (ft.name LIKE concat(concat('%', #{key}), '%') or ft.id = #{key})
+        ORDER BY ft.createdate DESC,ft.createtime DESC,ft.modifydate DESC,ft.modifytime DESC,id DESC
+    </select>
+    <resultMap id="searchTypeMap" type="com.cloudstore.dev.bean.EcodeSearch">
+        <id column="id" property="id"></id>
+        <result column="name" property="name"></result>
+        <result column="flownum" property="flowNum"></result>
+        <result column="state" property="state"></result>
+        <result column="content" property="content"></result>
+        <result column="appid" property="appId"></result>
+        <result column="parentfolder" property="parentFolder"></result>
+        <result column="foldertype" property="typeId"></result>
+        <result column="parentid" property="parentId"></result>
+    </resultMap>
+    <select id="searchTypeSqlServer" resultMap="searchTypeMap">
+        SELECT
+        ft.id,ft.name,ft.flownum,ft.parentid
+        FROM cloudstore_foldertype ft
+        WHERE ft.deleted = 0
+        AND (ft.name LIKE '%' + #{key} + '%' or ft.id = #{key})
+        ORDER BY ft.createdate DESC,ft.createtime DESC,ft.modifydate DESC,ft.modifytime DESC,id DESC
+    </select>
+
+    <select id="searchFolder" resultMap="searchTypeMap">
+        SELECT
+        cc.id,cc.name,cc.flownum,cc.status,cc.parentid,cc.foldertype
+        FROM cloudstore_codefolder cc
+        WHERE cc.deleted = 0
+        AND (cc.name LIKE concat(concat('%', #{key}), '%') or cc.id = #{key})
+        ORDER BY cc.createdate DESC,cc.createtime DESC,cc.modifydate DESC,cc.modifytime DESC,id DESC
+    </select>
+    <resultMap id="searchFolderMap" type="com.cloudstore.dev.bean.EcodeSearch">
+        <id column="id" property="id"></id>
+        <result column="name" property="name"></result>
+        <result column="flownum" property="flowNum"></result>
+        <result column="state" property="state"></result>
+        <result column="content" property="content"></result>
+        <result column="appid" property="appId"></result>
+        <result column="parentfolder" property="parentFolder"></result>
+        <result column="foldertype" property="typeId"></result>
+        <result column="parentid" property="parentId"></result>
+    </resultMap>
+    <select id="searchFolderSqlServer" resultMap="searchTypeMap">
+         SELECT
+        cc.id,cc.name,cc.flownum,cc.status,cc.parentid,cc.foldertype
+        FROM cloudstore_codefolder cc
+        WHERE cc.deleted = 0
+        AND (cc.name LIKE '%' + #{key} + '%' or cc.id = #{key})
+        ORDER BY cc.createdate DESC,cc.createtime DESC,cc.modifydate DESC,cc.modifytime DESC,id DESC
+    </select>
+
+
+
+</mapper>
