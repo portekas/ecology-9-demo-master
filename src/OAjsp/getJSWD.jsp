@@ -12,11 +12,11 @@
     response.setHeader("cache-control", "no-cache");
     response.setHeader("pragma", "no-cache");
     response.setHeader("expires", "Mon 1 Jan 1990 00:00:00 GMT");
-    String jsmc = Util.null2String(request.getParameter("jsmc"));
+    String id = Util.null2String(request.getParameter("id"));
     RecordSet rs = new RecordSet();
     List<Map<String,String>> resArr = new ArrayList<>();
     Map<String,String> resMap = new HashMap<>();
-    rs.executeSql("SELECT wdmczw,wdmc FROM uf_jswdgl_dt1 where mainid = "+jsmc+" order by px");
+    rs.executeSql("SELECT wdmczw,wdmc FROM uf_jswdgl_dt1 where mainid = "+id+" order by px");
     while(rs.next()){
         resMap = new HashMap<>();
         resMap.put("wdmc",rs.getString("wdmc"));
@@ -49,19 +49,55 @@
             font-size: 13px;
             text-decoration:none;
         }
+        .btnCol {
+            border-radius: 2px;
+            color: #fff;
+            background-color: #2db7f5;
+            border-color: #2db7f5;
+            padding: 5px 15px;
+            /*line-height: 1.6;*/
+            border: 1px solid transparent;
+            cursor:pointer;
+        }
+        .butSpen{
+            display: inline-block;
+            line-height: 28px;
+            vertical-align: middle;
+            margin-left: 20px;
+        }
     </style>
 
     <script>
-
+        function openwtlb(){
+            window.open("/spa/cube/index.html#/main/cube/search?customid=1531");
+        }
+        function openwtxj(){
+            window.open("/spa/cube/index.html#/main/cube/card?type=1&modeId=224&formId=-505");
+        }
     </script>
 </head>
 <body onload="">
+<div style="min-height: 245px">
 <table id="tableBody" class="tableBody">
-    <tbody>
     <c:forEach items="${resArr}" var="res">
         <tr><td><a href="/spa/document/index.jsp?id=${res.wdmc}&router=1#/main/document/detail?" target="_blank">${res.wdmczw}</a></td></tr>
     </c:forEach>
-    </tbody>
-
 </table>
+</div>
+
+    <div style="float: left;width: 50%;text-align: center;">
+        <span class="butSpen">
+            <button type="button" class="btnCol" onclick="openwtlb()">
+                <span>常用问题查询</span>
+            </button>
+        </span>
+    </div>
+    <div style="float: left;text-align: center;">
+        <span class="butSpen">
+            <button type="button" class="btnCol" onclick="openwtxj()">
+                <span>常用问题发布</span>
+            </button>
+        </span>
+    </div>
+
 </body>
