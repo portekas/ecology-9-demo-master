@@ -50,12 +50,12 @@
             text-decoration:none;
         }
         .btnCol {
-            border-radius: 2px;
+            border-radius: 7px;
             color: #fff;
             background-color: #2db7f5;
             border-color: #2db7f5;
-            padding: 5px 15px;
-            /*line-height: 1.6;*/
+            padding: 7px 15px;
+            line-height: 1.5;
             border: 1px solid transparent;
             cursor:pointer;
         }
@@ -88,14 +88,14 @@
     <div style="float: left;width: 50%;text-align: center;">
         <span class="butSpen">
             <button type="button" class="btnCol" onclick="openwtlb()">
-                <span>常用问题查询</span>
+                <span>常见问题查询</span>
             </button>
         </span>
     </div>
     <div style="float: left;text-align: center;">
         <span class="butSpen">
             <button type="button" class="btnCol" onclick="openwtxj()">
-                <span>常用问题发布</span>
+                <span>常见问题发布</span>
             </button>
         </span>
     </div>
