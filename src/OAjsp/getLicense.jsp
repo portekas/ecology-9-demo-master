@@ -92,9 +92,9 @@
             cond = StringUtils.isNotBlank(grrq)?(cond+" and DateDiff(yy,grrq,'"+grrq+"')=0"):cond;
             String zclb = rs.getString("zclb");
             String pdmc = rs.getString("pdmc");
-            cond = StringUtils.isNoneBlank(zclb)?(cond+" and zclb="+zclb):cond;
-            String insqdsql = "insert into uf_gdzcpdqd(zcgzbm, zcgzgs, zp ,fj,cfdz,xgcglc,ipdz,zclb,zcbz,dw,sl,cgr,gysmc,sfbf,sfxmb,syr,xmbh,zcxgbm,zclbid,jkzt,aqsz,bgrj,czxt,qtrj,gdzcmc,gdzcbh,zclbwb,grrq,zt,cgje,zjnx,pp,xh,jyrq,bgr,bgrszbm,bz,xmmc,xmmclzy,zcbfrq,zcbfczr,zcbfczsm,sfypd,sygs,sffy,yzcid,pdjhid,formmodeid) " +
-                    "(select zcgzbm, zcgzgs, zp ,fj,cfdz,xgcglc,ipdz,zclb,zcbz,dw,sl,cgr,gysmc,sfbf,sfxmb,syr,xmbh,zcxgbm,zclbid,jkzt,aqsz,bgrj,czxt,qtrj,gdzcmc,gdzcbh,zclbwb,grrq,zt,cgje,zjnx,pp,xh,jyrq,bgr,bgrszbm,bz,xmmc,xmmclzy,zcbfrq,zcbfczr,zcbfczsm,sfypd,sygs,sffy,id,"+bid+",253,(ISNULL(pp,'')+'  '+ISNULL(xh,'')+'  '+ISNULL(CAST(zcbz AS NVARCHAR(300)),'')) from uf_gdzcd where "+cond+")";
+            cond = StringUtils.isNoneBlank(zclb)?(cond+" and zclb in ("+zclb+")"):cond;
+            String insqdsql = "insert into uf_gdzcpdqd(zcgzbm, zcgzgs, zp ,fj,cfdz,xgcglc,ipdz,zclb,zcbz,dw,sl,cgr,gysmc,sfbf,sfxmb,syr,xmbh,zcxgbm,zclbid,jkzt,aqsz,bgrj,czxt,qtrj,gdzcmc,gdzcbh,zclbwb,grrq,zt,cgje,zjnx,pp,xh,jyrq,bgr,bgrszbm,bz,xmmc,xmmclzy,zcbfrq,zcbfczr,zcbfczsm,sfypd,sygs,sffy,yzcid,pdjhid,formmodeid,ppxh,pdzt,ybgr,yzcsybm,yzczzgs) " +
+                    "(select zcgzbm, zcgzgs, zp ,fj,cfdz,xgcglc,ipdz,zclb,zcbz,dw,sl,cgr,gysmc,sfbf,sfxmb,syr,xmbh,zcxgbm,zclbid,jkzt,aqsz,bgrj,czxt,qtrj,gdzcmc,gdzcbh,zclbwb,grrq,zt,cgje,zjnx,pp,xh,jyrq,bgr,bgrszbm,bz,xmmc,xmmclzy,zcbfrq,zcbfczr,zcbfczsm,sfypd,sygs,sffy,id,"+bid+",253,(ISNULL(pp,'')+'  '+ISNULL(xh,'')+'  '+ISNULL(CAST(zcbz AS NVARCHAR(300)),'')),0,bgr,zcgzbm,zczzgs from uf_gdzcd where "+cond+")";
             rs.executeSql(insqdsql);
             String newDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
             String insbmsql = "INSERT INTO uf_bmzcpdd (pdjh, pddmc, pdrq, pdbm, pdsl, pdgs, pdry, formmodeid)" +
