@@ -4,6 +4,7 @@
 <%@page import="weaver.hrm.*" %>
 <%@ page import="org.json.JSONObject" %>
 <%@ page import="java.text.SimpleDateFormat" %>
+<%@ page import="org.apache.commons.lang3.StringUtils" %>
 <%@ page trimDirectiveWhitespaces="true" %>
 <jsp:useBean id="rci" class="weaver.hrm.resource.ResourceComInfo" scope="page"/>
 
@@ -15,6 +16,7 @@
     response.setHeader("pragma", "no-cache");
     response.setHeader("expires", "Mon 1 Jan 1990 00:00:00 GMT");
     String operation = Util.null2String(request.getParameter("operation"));
+    String bid = Util.null2String(request.getParameter("bid"));
     JSONObject json = new JSONObject();
     User user=HrmUserVarify.getUser(request,response);
     RecordSet rs = new RecordSet();
@@ -76,6 +78,30 @@
         }
         out.clear();
         out.print(json);
+
+    }else if("addZCPD".equals(operation)){
+        rs.writeLog("----开始获取固定资产计划------");
+        rs.executeSql("SELECT id,pdgs,pdbm,grrq,zclb,pdmc FROM uf_gdzcpdjh WHERE id = "+bid);
+        String cond = "";
+        if(rs.next()){
+            String pdgs = rs.getString("pdgs");
+            cond = "zcgzgs = " + pdgs;
+            String pdbm = rs.getString("pdbm");
+            cond = StringUtils.isNotBlank(pdbm)?(cond+" and zcgzbm="+pdbm):cond;
+            String grrq = rs.getString("grrq");
+            cond = StringUtils.isNotBlank(grrq)?(cond+" and DateDiff(yy,grrq,'"+grrq+"')=0"):cond;
+            String zclb = rs.getString("zclb");
+            String pdmc = rs.getString("pdmc");
+            cond = StringUtils.isNoneBlank(zclb)?(cond+" and zclb="+zclb):cond;
+            String insqdsql = "insert into uf_gdzcpdqd(zcgzbm, zcgzgs, zp ,fj,cfdz,xgcglc,ipdz,zclb,zcbz,dw,sl,cgr,gysmc,sfbf,sfxmb,syr,xmbh,zcxgbm,zclbid,jkzt,aqsz,bgrj,czxt,qtrj,gdzcmc,gdzcbh,zclbwb,grrq,zt,cgje,zjnx,pp,xh,jyrq,bgr,bgrszbm,bz,xmmc,xmmclzy,zcbfrq,zcbfczr,zcbfczsm,sfypd,sygs,sffy,yzcid,pdjhid,formmodeid) " +
+                    "(select zcgzbm, zcgzgs, zp ,fj,cfdz,xgcglc,ipdz,zclb,zcbz,dw,sl,cgr,gysmc,sfbf,sfxmb,syr,xmbh,zcxgbm,zclbid,jkzt,aqsz,bgrj,czxt,qtrj,gdzcmc,gdzcbh,zclbwb,grrq,zt,cgje,zjnx,pp,xh,jyrq,bgr,bgrszbm,bz,xmmc,xmmclzy,zcbfrq,zcbfczr,zcbfczsm,sfypd,sygs,sffy,id,"+bid+",253,(ISNULL(pp,'')+'  '+ISNULL(xh,'')+'  '+ISNULL(CAST(zcbz AS NVARCHAR(300)),'')) from uf_gdzcd where "+cond+")";
+            rs.executeSql(insqdsql);
+            String newDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+            String insbmsql = "INSERT INTO uf_bmzcpdd (pdjh, pddmc, pdrq, pdbm, pdsl, pdgs, pdry, formmodeid)" +
+                    "  (SELECT "+bid+",'"+pdmc+"','"+newDate+"',zcgzbm,count(id),"+pdgs+","+user.getUID()+",251 FROM uf_gdzcpdqd where pdjhid = "+bid+" GROUP BY zcgzbm )";
+            rs.executeSql(insbmsql);
+            out.print(json);
+        }
     }
 
 
