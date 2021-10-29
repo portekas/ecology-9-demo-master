@@ -1,0 +1,130 @@
+body{
+    margin: 0;
+    padding: 0;
+    font-family: Helvetica Neue,Helvetica,PingFang SC,Hiragino Sans GB,Microsoft YaHei,\\5FAE\8F6F\96C5\9ED1,Arial,sans-serif;
+    font-size: 12px;
+    line-height: 1.6;
+}
+.tableBody{
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tableBody tr{
+    height: 40px;
+}
+
+.tableBody td {
+    padding-left: 30px;
+    cursor: pointer;
+    border-bottom: 1px dashed rgb(233, 233, 233);
+}
+
+.tableBody tr:hover {
+    background: #DEF0FF;
+}
+
+.tableBody td span{
+    color: #494949;
+    font-size: 13px;
+}
+/*------------------------------*/
+.wea-left-right-layout {
+    height: 100%;
+    overflow: hidden;
+    background-color: #fff;
+    -webkit-transition: padding 0.1s ease-in-out;
+    -o-transition: padding 0.1s ease-in-out;
+    transition: padding 0.1s ease-in-out;
+}
+.wea-left-right-layout .wrap {
+    height: 100%;
+    overflow: hidden;
+    background-color: #fff;
+}
+.wea-left-right-layout-left {
+    height: 100%;
+    overflow: hidden;
+    background-color: #fff;
+    float: left;
+    border-right: 1px solid #eaeaea;
+    z-index: 9;
+}
+.wea-left-right-layout-right {
+    height: 100%;
+    overflow: hidden;
+    background-color: #fff;
+    position: relative;
+}
+.wea-left-right-layout-right .wea-left-right-layout-btn {
+    width: 18px;
+    height: 60px;
+    position: absolute;
+    top: 50%;
+    left: 0;
+    margin-top: -30px;
+    z-index: 11;
+    cursor: pointer;
+    background-size: 100% 100%;
+}
+
+.wea-left-right-layout-right .wea-left-right-layout-btn-hide {
+    background: url('/cloudstore/resource/pc/com/images/leftTree-hide.png') no-repeat -2px 0;
+}
+.wea-left-right-layout-right .wea-left-right-layout-btn-hide:hover {
+    background: url('/cloudstore/resource/pc/com/images/leftTree-hide-hover.png') no-repeat -2px 0;
+}
+.wea-left-right-layout-right .wea-left-right-layout-btn-show {
+    background: url('/cloudstore/resource/pc/com/images/leftTree-show.png') no-repeat -2px 0;
+}
+.wea-left-right-layout-right .wea-left-right-layout-btn-show:hover {
+    background: url('/cloudstore/resource/pc/com/images/leftTree-show-hover.png') no-repeat -2px 0;
+}
+
+.wea-new-top .wea-new-top-title {
+    font-weight: 500;
+    color: #484848;
+    white-space: nowrap;
+    overflow: hidden;
+    -o-text-overflow: ellipsis;
+    text-overflow: ellipsis;
+}
+
+.wea-new-top .wea-new-top-title .wea-new-top-title-breadcrumb {
+    line-height: 51px;
+    color: #484a4d;
+    margin-left: 3px;
+}
+
+[class*=" icon-mode"],
+[class^=icon-mode] {
+    font-family: "icon-mode" !important;
+    font-style: normal;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+[class^="icon-"],
+[class*=" icon-"] {
+    /* use !important to prevent issues with browser extensions that change fonts */
+    font-family: 'menu' !important;
+    speak: none;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    /* Better Font Rendering =========== */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.wea-f14{font-size: 14px !important;}
+
+.icon-mode-org:before {
+    content: "\e89a";
+}
+
+.ant-col-lg-0 {
+    display: none;
+}
