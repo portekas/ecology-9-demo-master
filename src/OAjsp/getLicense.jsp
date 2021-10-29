@@ -125,6 +125,18 @@
         }
         out.clear();
         out.print(json);
+
+    }else if("getgdzcd".equals(operation)){
+        rs.executeSql("insert into uf_gdzcd(syqkbz,sybm,zcgzbm,zcgzgs,zp,fj,cfdz,xgcglc,ipdz,zclb,zcbz,dw,sl,cgr,gysmc,sfbf,sfxmb,syr,xmbh,zcxgbm,zclbid,jkzt,aqsz,bgrj,czxt,qtrj,gdzcmc,gdzcbh,zclbwb,grrq,zt,cgje,zjnx,pp,xh,jyrq,bgr,bgrszbm,bz,xmmc,xmmclzy" +
+                ",zcbfrq,zcbfczr,zcbfczsm,sfypd,sygs,sffy)" +
+                "(SELECT syqkbz,sybm,zcgzbm,zcgzgs,zp,fj,cfdz,xgcglc,ipdz,zclb,zcbz,dw,sl,cgr,gysmc,sfbf,sfxmb,syr,xmbh,zcxgbm,zclbid,jkzt,aqsz,bgrj,czxt,qtrj,gdzcmc,gdzcbh,zclbwb,grrq,zt,cgje,zjnx,pp,xh,jyrq,bgr,bgrszbm,bz,xmmc,xmmclzy" +
+                ",zcbfrq,zcbfczr,zcbfczsm,sfypd,sygs,sffy FROM uf_gdzcd WHERE id="+bid+");" +
+                "SELECT MAX(id) AS gid FROM uf_gdzcd");
+        if(rs.next()){
+            json.put("gid",rs.getInt("gid"));
+        }
+        out.clear();
+        out.print(json);
     }
 
 
