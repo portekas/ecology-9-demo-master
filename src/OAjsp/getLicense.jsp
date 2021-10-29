@@ -17,6 +17,7 @@
     response.setHeader("expires", "Mon 1 Jan 1990 00:00:00 GMT");
     String operation = Util.null2String(request.getParameter("operation"));
     String bid = Util.null2String(request.getParameter("bid"));
+    String par1 = Util.null2String(request.getParameter("par1"));
     JSONObject json = new JSONObject();
     User user=HrmUserVarify.getUser(request,response);
     RecordSet rs = new RecordSet();
@@ -80,7 +81,6 @@
         out.print(json);
 
     }else if("addZCPD".equals(operation)){
-        rs.writeLog("----开始获取固定资产计划------");
         rs.executeSql("SELECT COUNT(id) as num FROM uf_gdzcpdqd WHERE pdjhid = "+bid);
         if(rs.next()){
             int num = rs.getInt("num");
@@ -117,6 +117,14 @@
             out.clear();
             out.print(json);
         }
+
+    }else if("getbmzcpdd".equals(operation)){
+        rs.executeSql("SELECT id FROM uf_bmzcpdd WHERE pdjh="+bid+" and pdbm="+par1);
+        if(rs.next()){
+            json.put("id",rs.getInt("id"));
+        }
+        out.clear();
+        out.print(json);
     }
 
 
