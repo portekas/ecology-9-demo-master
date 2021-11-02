@@ -9,16 +9,19 @@
 <%@ page isELIgnored="false"%>
 
 <%
+    /**
+     * OA通用树
+     */
     response.setHeader("cache-control", "no-cache");
     response.setHeader("pragma", "no-cache");
     response.setHeader("expires", "Mon 1 Jan 1990 00:00:00 GMT");
     User user=HrmUserVarify.getUser(request,response);
     String bid = Util.null2String(request.getParameter("bid"));
-    RecordSet rs = new RecordSet();
     List<Map<String,Object>> resArr = new ArrayList<>();
     Map<String,String> resMap = new HashMap<>();
     Map<String,Object> treeMap = new HashMap<>();
-    rs.executeSql("SELECT sxmc,ljdz,gdcs,dtcs,fzcs,tjsql FROM uf_oatys WHERE id = "+bid);
+    RecordSet rs = new RecordSet();
+    rs.executeSql("SELECT sxmc,ljdz,gdcs,dtcs,fzcs,tjsql,ryxxcs,dytjbzd FROM uf_oatys WHERE id = "+bid);
     if(rs.next()){
         StringBuilder lj = new StringBuilder();
         String sxmc = rs.getString("sxmc");//树形名称
@@ -38,19 +41,34 @@
         request.setAttribute("sxmc", sxmc);
         request.setAttribute("dtcs", dtcs);
 
+        //查询人员表信息拼接统计sql
+        String ryxxcs = rs.getString("ryxxcs");
+        String dytjbzd = rs.getString("dytjbzd");
+        StringBuilder con = new StringBuilder();
+        if(StringUtils.isNotBlank(ryxxcs)){
+            RecordSet rs1 = new RecordSet();
+            String s = "select id," + ryxxcs + " from hrmresource where id=" + user.getUID();
+            rs1.executeSql(s);
+            if(rs1.next()){
+                String[] ry = ryxxcs.split(",");
+                String[] tj = dytjbzd.split(",");
+                for(int i = 0; i< ry.length; i++){
+                    con.append(" AND ").append(tj[i]).append(" = '").append(rs1.getString(ry[i])).append("'");
+                }
+            }
+        }
+
         //拼接统计sql
         String sql = rs.getString("tjsql");
         String fzcs = rs.getString("fzcs");
         if(StringUtils.isNotBlank(fzcs)){
-            StringBuilder con = new StringBuilder();
             String[] tem = fzcs.split(",");
             for(int i = 0; i < tem.length; i++){
-                if(i != 0){
-                    con.append(" and ");
-                }
-                con.append(tem[i]).append(" = '").append(resMap.get(tem[i])).append("'");
+                con.append(" AND ").append(tem[i]).append(" = '").append(resMap.get(tem[i])).append("'");
             }
-            sql = sql.replace("$tjcs$",con.toString());
+        }
+        if(con.length() > 0){
+            sql = sql.replace("$tjcs$"," 1 = 1 " + con.toString());
         }
         rs.executeSql(sql);
         rs.writeLog("执行的sql为："+sql);
