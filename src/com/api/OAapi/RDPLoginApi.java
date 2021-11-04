@@ -17,6 +17,12 @@ import javax.ws.rs.core.MediaType;
 @Path("/rdploginApi")
 public class RDPLoginApi {
 
+    /**
+     * 查询报表权限
+     * @param req
+     * @param res
+     * @return
+     */
     @Path("/rdplogin")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -26,7 +32,7 @@ public class RDPLoginApi {
         RecordSet xmbRec = new RecordSet();
         String bbid = Util.null2String(req.getParameter("bbid"));
         String xmbsql = "SELECT COUNT(uz.id) as userNum FROM uf_zhdybbqx uz " +
-                "WHERE uz.dybbid = '"+bbid+"' and (uz.ry like '%,"+user.getUID()+",%' or uz.ry like '"+user.getUID()+",%' or uz.ry like '%,"+user.getUID()+"')";
+                "WHERE uz.dybbid = '"+bbid+"' and (uz.ry like '%,"+user.getUID()+",%' or uz.ry like '"+user.getUID()+",%' or uz.ry like '%,"+user.getUID()+"' or uz.ry is null)";
         xmbRec.execute(xmbsql);
         if(xmbRec.next()){
             json.put("userNum",xmbRec.getString("userNum"));
