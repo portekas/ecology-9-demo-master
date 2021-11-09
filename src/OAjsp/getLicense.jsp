@@ -172,7 +172,7 @@
         if(rs.next()){
             rs.executeSql("UPDATE uf_OAcoldesc SET labeldesc = '"+par1+"' WHERE labelid = '"+bid+"'");
         }else{
-            rs.executeSql("INSERT INTO uf_OAcoldesc (labelid,labeldesc) VALUES('"+bid+"','"+par1+"')");
+            rs.executeSql("INSERT INTO uf_OAcoldesc (labelid,labeldesc,formmodeid) VALUES('"+bid+"','"+par1+"','167')");
         }
         out.print(json);
     }
