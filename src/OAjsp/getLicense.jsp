@@ -138,35 +138,43 @@
         out.clear();
         out.print(json);
 
-    }else if("getXMXQ".equals(operation)){
+    }else if("getXMXQ".equals(operation)) {
         //月计划
-        rs.executeSql("SELECT yjh FROM formtable_main_272_dt1 WHERE xmbh = '"+ bid +"' ORDER BY id DESC");
-        if(rs.next()){
-            json.put("yjh",rs.getString("yjh"));
+        rs.executeSql("SELECT yjh FROM formtable_main_272_dt1 WHERE xmbh = '" + bid + "' ORDER BY id DESC");
+        if (rs.next()) {
+            json.put("yjh", rs.getString("yjh"));
         }
         //周计划
-        rs.executeSql("SELECT zjh FROM formtable_main_273_dt1 WHERE xmbh = '"+ bid +"' ORDER BY id DESC");
-        if(rs.next()){
-            json.put("zjh",rs.getString("zjh"));
+        rs.executeSql("SELECT zjh FROM formtable_main_273_dt1 WHERE xmbh = '" + bid + "' ORDER BY id DESC");
+        if (rs.next()) {
+            json.put("zjh", rs.getString("zjh"));
         }
         //已完成产值
-        rs.executeSql("select sum(sbje) as czje from uf_gcxmzchb where xmbh = '"+ bid +"'");
-        if(rs.next()){
-            json.put("czje",rs.getString("czje"));
+        rs.executeSql("select sum(sbje) as czje from uf_gcxmzchb where xmbh = '" + bid + "'");
+        if (rs.next()) {
+            json.put("czje", rs.getString("czje"));
         }
         //已完成收款
-        rs.executeSql("select sum(hkje) as hkje from uf_xmbhkjl where xmbh = '"+ bid +"'");
-        if(rs.next()){
-            json.put("hkje",rs.getString("hkje"));
+        rs.executeSql("select sum(hkje) as hkje from uf_xmbhkjl where xmbh = '" + bid + "'");
+        if (rs.next()) {
+            json.put("hkje", rs.getString("hkje"));
         }
         //回款金额
-        rs.executeSql("SELECT htje FROM uf_xmb ux WHERE ux.xmbh = '"+ bid +"'");
-        if(rs.next()){
-            json.put("htje",rs.getString("htje"));
+        rs.executeSql("SELECT htje FROM uf_xmb ux WHERE ux.xmbh = '" + bid + "'");
+        if (rs.next()) {
+            json.put("htje", rs.getString("htje"));
         }
         out.clear();
         out.print(json);
-    }
 
+    }else if("addColdesc".equals(operation)){
+        rs.executeSql("SELECT * FROM uf_OAcoldesc WHERE labelid = '"+bid+"'");
+        if(rs.next()){
+            rs.executeSql("UPDATE uf_OAcoldesc SET labeldesc = '"+par1+"' WHERE labelid = '"+bid+"'");
+        }else{
+            rs.executeSql("INSERT INTO uf_OAcoldesc (labelid,labeldesc) VALUES('"+bid+"','"+par1+"')");
+        }
+        out.print(json);
+    }
 
 %>
