@@ -10,7 +10,7 @@
 
 <%
     /*
-    根据requestid获取对应流程的明细
+     查询表中的数据
     */
     response.setHeader("cache-control", "no-cache");
     response.setHeader("pragma", "no-cache");
@@ -126,21 +126,47 @@
         out.clear();
         out.print(json);
 
-    }else if("getgdzcd".equals(operation)){
+    }else if("getgdzcd".equals(operation)) {
         rs.executeSql("insert into uf_gdzcd(syqkbz,sybm,zcgzbm,zcgzgs,zp,fj,cfdz,xgcglc,ipdz,zclb,zcbz,dw,sl,cgr,gysmc,sfbf,sfxmb,syr,xmbh,zcxgbm,zclbid,jkzt,aqsz,bgrj,czxt,qtrj,gdzcmc,zclbwb,grrq" +
                 ",zt,cgje,zjnx,pp,xh,jyrq,bgr,bgrszbm,bz,xmmc,xmmclzy,zcbfrq,zcbfczr,zcbfczsm,sfypd,sygs,sffy,formmodeid)" +
                 "(SELECT syqkbz,sybm,zcgzbm,zcgzgs,zp,fj,cfdz,xgcglc,ipdz,zclb,zcbz,dw,sl,cgr,gysmc,sfbf,sfxmb,syr,xmbh,zcxgbm,zclbid,jkzt,aqsz,bgrj,czxt,qtrj,gdzcmc,zclbwb,grrq" +
-                ",zt,cgje,zjnx,pp,xh,jyrq,bgr,bgrszbm,bz,xmmc,xmmclzy,zcbfrq,zcbfczr,zcbfczsm,sfypd,sygs,sffy,formmodeid FROM uf_gdzcd WHERE id="+bid+")");
-        rs.executeSql("SELECT MAX(id) AS gid FROM uf_gdzcd where bgr = "+par1);
+                ",zt,cgje,zjnx,pp,xh,jyrq,bgr,bgrszbm,bz,xmmc,xmmclzy,zcbfrq,zcbfczr,zcbfczsm,sfypd,sygs,sffy,formmodeid FROM uf_gdzcd WHERE id=" + bid + ")");
+        rs.executeSql("SELECT MAX(id) AS gid FROM uf_gdzcd where bgr = " + par1);
+        if (rs.next()) {
+            json.put("gid", rs.getInt("gid"));
+        }
+        out.clear();
+        out.print(json);
+
+    }else if("getXMXQ".equals(operation)){
+        //月计划
+        rs.executeSql("SELECT yjh FROM formtable_main_272_dt1 WHERE xmbh = '"+ bid +"' ORDER BY id DESC");
         if(rs.next()){
-            json.put("gid",rs.getInt("gid"));
+            json.put("yjh",rs.getString("yjh"));
+        }
+        //周计划
+        rs.executeSql("SELECT zjh FROM formtable_main_273_dt1 WHERE xmbh = '"+ bid +"' ORDER BY id DESC");
+        if(rs.next()){
+            json.put("zjh",rs.getString("zjh"));
+        }
+        //已完成产值
+        rs.executeSql("select sum(sbje) as czje from uf_gcxmzchb where xmbh = '"+ bid +"'");
+        if(rs.next()){
+            json.put("czje",rs.getString("czje"));
+        }
+        //已完成收款
+        rs.executeSql("select sum(hkje) as hkje from uf_xmbhkjl where xmbh = '"+ bid +"'");
+        if(rs.next()){
+            json.put("hkje",rs.getString("hkje"));
+        }
+        //回款金额
+        rs.executeSql("SELECT htje FROM uf_xmb ux WHERE ux.xmbh = '"+ bid +"'");
+        if(rs.next()){
+            json.put("htje",rs.getString("htje"));
         }
         out.clear();
         out.print(json);
     }
-
-
-
 
 
 %>
