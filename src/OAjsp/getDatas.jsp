@@ -17,6 +17,10 @@
     User user=HrmUserVarify.getUser(request,response);
     String field = Util.null2String(request.getParameter("field"));
     String conditions = Util.null2String(request.getParameter("con"));
+    //解决参数中可能含有全角的问题
+    conditions = conditions.replaceAll("ｏｒ","or");
+    conditions = conditions.replaceAll("ａｎｄ","and");
+    conditions = conditions.replaceAll("ｉｎ","in");
     String tableName = Util.null2String(request.getParameter("taName"));
     List<JSONObject> resArr = new ArrayList<>();
     JSONObject json ;
