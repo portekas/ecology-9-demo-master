@@ -167,14 +167,48 @@
         out.clear();
         out.print(json);
 
-    }else if("addColdesc".equals(operation)){
-        rs.executeSql("SELECT * FROM uf_OAcoldesc WHERE labelid = '"+bid+"'");
-        if(rs.next()){
-            rs.executeSql("UPDATE uf_OAcoldesc SET labeldesc = '"+par1+"' WHERE labelid = '"+bid+"'");
-        }else{
-            rs.executeSql("INSERT INTO uf_OAcoldesc (labelid,labeldesc,formmodeid) VALUES('"+bid+"','"+par1+"','167')");
+    }else if("addColdesc".equals(operation)) {
+        rs.executeSql("SELECT * FROM uf_OAcoldesc WHERE labelid = '" + bid + "'");
+        if (rs.next()) {
+            rs.executeSql("UPDATE uf_OAcoldesc SET labeldesc = '" + par1 + "' WHERE labelid = '" + bid + "'");
+        } else {
+            rs.executeSql("INSERT INTO uf_OAcoldesc (labelid,labeldesc,formmodeid) VALUES('" + bid + "','" + par1 + "','167')");
         }
         out.print(json);
+
+    }else if("getXMZTCQX".equals(operation)) {
+        //查询角色
+        rs.executeSql("SELECT roleid FROM hrmrolemembers WHERE resourceid = '" + user.getUID() + "'");
+        StringBuilder roleIds = new StringBuilder();
+        while (rs.next()){
+            String rid = rs.getString("roleid");
+            if(!"".equals(roleIds.toString())){
+                roleIds.append(",");
+            }
+            roleIds.append(rid);
+        }
+        //查询角色对应按钮
+        rs.executeSql("SELECT an FROM uf_xmztcqxpz_dt1 uxd LEFT JOIN uf_xmztcqxpz ux ON  ux.id = uxd.mainid WHERE cast(ux.js as varchar(max)) in("+roleIds.toString()+")");
+        StringBuilder ans = new StringBuilder();
+        while (rs.next()){
+            if(!"".equals(ans.toString())){
+                ans.append(",");
+            }
+            ans.append(rs.getString("an"));
+        }
+        //查询按钮
+        List<Object> resArr = new ArrayList<>();
+        if(!"".equals(ans.toString())){
+            rs.executeSql("select anmc,ffm from uf_xmztcanpz where id in ("+ ans.toString() +") order by px");
+            while (rs.next()){
+                json = new JSONObject();
+                json.put("anmc",rs.getString("anmc"));
+                json.put("ffm",rs.getString("ffm"));
+                resArr.add(json);
+            }
+        }
+        out.clear();
+        out.print(resArr);
     }
 
 %>
