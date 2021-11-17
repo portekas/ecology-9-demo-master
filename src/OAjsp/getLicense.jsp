@@ -5,6 +5,7 @@
 <%@ page import="org.json.JSONObject" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="org.apache.commons.lang3.StringUtils" %>
+<%@ page import="java.math.BigDecimal" %>
 <%@ page trimDirectiveWhitespaces="true" %>
 <jsp:useBean id="rci" class="weaver.hrm.resource.ResourceComInfo" scope="page"/>
 
@@ -19,6 +20,7 @@
     String bid = Util.null2String(request.getParameter("bid"));
     String par1 = Util.null2String(request.getParameter("par1"));
     JSONObject json = new JSONObject();
+    List<Object> objArr = new ArrayList<>();
     User user=HrmUserVarify.getUser(request,response);
     RecordSet rs = new RecordSet();
     if("getXYQZZTZ".equals(operation)){
@@ -197,18 +199,92 @@
             ans.append(rs.getString("an"));
         }
         //查询按钮
-        List<Object> resArr = new ArrayList<>();
         if(!"".equals(ans.toString())){
             rs.executeSql("select anmc,ffm from uf_xmztcanpz where id in ("+ ans.toString() +") order by px");
             while (rs.next()){
                 json = new JSONObject();
                 json.put("anmc",rs.getString("anmc"));
                 json.put("ffm",rs.getString("ffm"));
-                resArr.add(json);
+                objArr.add(json);
             }
         }
         out.clear();
-        out.print(resArr);
+        out.print(objArr);
+
+
+    }else if("getXMZJLS".equals(operation)) {
+        //默认值
+        for(int i= 1;i< 16;i++){
+            json = new JSONObject();
+            json.put("fl","zcfl"+i);
+            json.put("jr",0);
+            objArr.add(json);
+        }
+        BigDecimal bd1 = new BigDecimal(0);
+        BigDecimal bdt;
+        rs.executeSql("SELECT lx,sum(zcje) AS bxje FROM V_xmzjzc vx  WHERE xmbh = '"+bid+"' GROUP BY lx");
+        while (rs.next()){
+            json = new JSONObject();
+            String je = rs.getString("bxje");
+            json.put("fl","zcfl"+rs.getString("lx"));
+            json.put("jr",je);
+            objArr.add(json);
+            //统计支出
+            bdt = new BigDecimal(je);
+            bd1 = bd1.add(bdt);
+        }
+
+        //查询利息
+        rs.executeSql("SELECT sum(lx) as lx FROM uf_zjcbmx WHERE xmbh = '"+bid+"'");
+        json = new JSONObject();
+        json.put("fl","zcfl17");
+        json.put("jr",0);//默认值
+        if(rs.next()){
+            json.put("jr",rs.getString("lx"));
+            objArr.add(json);
+            //统计支出
+            bdt = new BigDecimal(rs.getString("lx"));
+            bd1 = bd1.add(bdt);
+        }
+
+        //保存支出
+        json = new JSONObject();
+        json.put("fl","zzc");
+        json.put("jr",bd1.doubleValue());
+        objArr.add(json);
+
+        //收入默认值
+        for(int i= 0;i< 2;i++){
+            json = new JSONObject();
+            json.put("fl","srfl"+i);
+            json.put("jr",0);
+            objArr.add(json);
+        }
+        BigDecimal bd2 = new BigDecimal(0);
+        rs.executeSql("SELECT lx,sum(srje) AS srje FROM V_xmzjsr WHERE xmbh = '"+bid+"' GROUP BY lx");
+        while (rs.next()){
+            json = new JSONObject();
+            json.put("fl","srfl"+rs.getString("lx"));
+            json.put("jr",rs.getString("srje"));
+            objArr.add(json);
+            //统计收入
+            bdt = new BigDecimal(rs.getString("srje"));
+            bd2 = bd2.add(bdt);
+        }
+
+        //保存收入
+        json = new JSONObject();
+        json.put("fl","zsr");
+        json.put("jr",bd2.doubleValue());
+        objArr.add(json);
+        //余额
+        json = new JSONObject();
+        json.put("fl","zye");
+        json.put("jr",bd2.subtract(bd1).doubleValue());
+        objArr.add(json);
+
+        out.clear();
+        out.print(objArr);
     }
 
 %>
