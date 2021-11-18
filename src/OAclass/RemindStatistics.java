@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
+ * 定时统计提醒数量
  * @author lg
  * @date 2021-10-25 08:47
  */
@@ -23,7 +24,7 @@ public class RemindStatistics extends BaseCronJob {
 
     @Override
     public void execute() {
-        this.kqLog.info("begin do RenewAccountingStatusJob invoke ...");
+        this.kqLog.info("begin do RemindStatistics invoke ...");
         SimpleDateFormat sd = new SimpleDateFormat("yyyy-MM-dd");
         Object[] arr;
         RecordSet rec = new RecordSet();
