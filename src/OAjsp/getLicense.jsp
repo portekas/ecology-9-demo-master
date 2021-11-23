@@ -216,6 +216,7 @@
         //默认值
 
         BigDecimal bd1 = new BigDecimal(0);
+        BigDecimal bd2 = new BigDecimal(0);
         BigDecimal bdt;
         rs.executeSql("SELECT lx,sum(zcje) AS bxje FROM V_xmzjzc vx  WHERE xmbh = '"+bid+"' GROUP BY lx");
         while (rs.next()){
@@ -234,8 +235,8 @@
         //查询利息
         rs.executeSql("SELECT ISNULL(sum(lx),0) as lx FROM uf_zjcbmx WHERE xmbh = '"+bid+"'");
         json = new JSONObject();
-        json.put("fl","zcfl17");
-        if(rs.next()){
+        if(rs.next() && !"0.00".equals(rs.getString("lx"))){
+            json.put("fl","zcfl17");
             json.put("jr",rs.getString("lx"));
             json.put("lx",17);
             json.put("szlx","1");
@@ -245,13 +246,40 @@
             bd1 = bd1.add(bdt);
         }
 
+        //查询保证金
+        rs.executeSql("SELECT fkje,ISNULL(bzjhkje,0) AS hkje FROM uf_bzjtz WHERE xmbh = '"+bid+"'");
+        json = new JSONObject();
+        json.put("fl","zcfl18");
+        if(rs.next()){
+            //支出
+            json.put("jr",rs.getString("fkje"));
+            json.put("lx",18);
+            json.put("szlx","3");
+            objArr.add(json);
+            //统计支出
+            bdt = new BigDecimal(rs.getString("fkje"));
+            bd1 = bd1.add(bdt);
+
+            if(!"0.00".equals(rs.getString("hkje"))){
+                //回款
+                json = new JSONObject();
+                json.put("fl","srfl2");
+                json.put("jr",rs.getString("hkje"));
+                json.put("lx","2");
+                json.put("szlx","4");
+                objArr.add(json);
+                //统计收入
+                bdt = new BigDecimal(rs.getString("hkje"));
+                bd2 = bd2.add(bdt);
+            }
+        }
+
         //保存支出
         json = new JSONObject();
         json.put("fl","zzc");
         json.put("jr",bd1.doubleValue());
         objArr.add(json);
 
-        BigDecimal bd2 = new BigDecimal(0);
         rs.executeSql("SELECT lx,sum(srje) AS srje FROM V_xmzjsr WHERE xmbh = '"+bid+"' GROUP BY lx");
         while (rs.next()){
             json = new JSONObject();
