@@ -214,12 +214,7 @@
 
     }else if("getXMZJLS".equals(operation)) {
         //默认值
-        for(int i= 1;i< 16;i++){
-            json = new JSONObject();
-            json.put("fl","zcfl"+i);
-            json.put("jr",0);
-            objArr.add(json);
-        }
+
         BigDecimal bd1 = new BigDecimal(0);
         BigDecimal bdt;
         rs.executeSql("SELECT lx,sum(zcje) AS bxje FROM V_xmzjzc vx  WHERE xmbh = '"+bid+"' GROUP BY lx");
@@ -227,6 +222,8 @@
             json = new JSONObject();
             String je = rs.getString("bxje");
             json.put("fl","zcfl"+rs.getString("lx"));
+            json.put("lx",rs.getString("lx"));
+            json.put("szlx","1");
             json.put("jr",je);
             objArr.add(json);
             //统计支出
@@ -238,9 +235,10 @@
         rs.executeSql("SELECT sum(lx) as lx FROM uf_zjcbmx WHERE xmbh = '"+bid+"'");
         json = new JSONObject();
         json.put("fl","zcfl17");
-        json.put("jr",0);//默认值
         if(rs.next()){
             json.put("jr",rs.getString("lx"));
+            json.put("lx",17);
+            json.put("szlx","1");
             objArr.add(json);
             //统计支出
             bdt = new BigDecimal(rs.getString("lx"));
@@ -253,19 +251,14 @@
         json.put("jr",bd1.doubleValue());
         objArr.add(json);
 
-        //收入默认值
-        for(int i= 0;i< 2;i++){
-            json = new JSONObject();
-            json.put("fl","srfl"+i);
-            json.put("jr",0);
-            objArr.add(json);
-        }
         BigDecimal bd2 = new BigDecimal(0);
         rs.executeSql("SELECT lx,sum(srje) AS srje FROM V_xmzjsr WHERE xmbh = '"+bid+"' GROUP BY lx");
         while (rs.next()){
             json = new JSONObject();
             json.put("fl","srfl"+rs.getString("lx"));
             json.put("jr",rs.getString("srje"));
+            json.put("lx",rs.getString("lx"));
+            json.put("szlx","0");
             objArr.add(json);
             //统计收入
             bdt = new BigDecimal(rs.getString("srje"));
