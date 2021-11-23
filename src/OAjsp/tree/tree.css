@@ -15,7 +15,7 @@ body{
 }
 
 .tableBody td {
-    padding-left: 30px;
+    /*padding-left: 30px;*/
     cursor: pointer;
     border-bottom: 1px dashed rgb(233, 233, 233);
 }
@@ -127,4 +127,14 @@ body{
 
 .ant-col-lg-0 {
     display: none;
+}
+
+.tealCen {
+    text-align: center;
+}
+
+.weleft {
+    width: 250px;
+    overflow: auto;
+    margin-left: 10px;
 }

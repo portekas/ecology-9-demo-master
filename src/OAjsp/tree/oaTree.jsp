@@ -30,8 +30,7 @@
         String dtcs = rs.getString("dtcs");//动态参数
         lj.append(ljdz);
         if(StringUtils.isNotBlank(gdcs)){
-            String[] par = gdcs.split(",");
-            for(String p:par){
+            for(String p:gdcs.split(",")){
                 String tem = Util.null2String(request.getParameter(p));
                 resMap.put(p,tem);
                 lj.append("&").append(p).append("=").append(tem);
@@ -62,13 +61,16 @@
         String sql = rs.getString("tjsql");
         String fzcs = rs.getString("fzcs");
         if(StringUtils.isNotBlank(fzcs)){
-            String[] tem = fzcs.split(",");
-            for(int i = 0; i < tem.length; i++){
-                con.append(" AND ").append(tem[i]).append(" = '").append(resMap.get(tem[i])).append("'");
+            for(String cs:gdcs.split(",")){
+                fzcs = fzcs.replace("$"+cs+"$",resMap.get(cs));
             }
+            con.append(fzcs);
         }
+
+        //替换sql的全角
+
         if(con.length() > 0){
-            sql = sql.replace("$tjcs$"," 1 = 1 " + con.toString());
+            sql = sql.replace("$tjcs$",con.toString());
         }
         rs.executeSql(sql);
         rs.writeLog("执行的sql为："+sql);
@@ -92,7 +94,7 @@
 </head>
 <body onload="">
 <div>
-    <div id="weleft" class="wea-left-right-layout-left ant-col-xs-8 ant-col-sm-7 ant-col-md-6 ant-col-lg-5" style="width: 250px;overflow: auto;">
+    <div id="weleft" class="wea-left-right-layout-left ant-col-xs-8 ant-col-sm-7 ant-col-md-6 ant-col-lg-5 weleft" >
         <div class="ant-row wea-new-top" style="border-bottom: 1px solid #e2e2e2">
             <div class="ant-col-14" style="padding-left: 20px; line-height: 50px;">
                 <div class="wea-new-top-title wea-f14">
@@ -108,12 +110,12 @@
             </tr>
             <tr onclick="attifram('${ljdz}')">
                 <td><span>全部</span></td>
-                <td><span>${sum}</span></td>
+                <td class="tealCen"><span>${sum}</span></td>
             </tr>
             <c:forEach items="${resArr}" var="res">
                 <tr onclick="attifram('${ljdz}&${dtcs}=${res.treeID}')">
                     <td><span>${res.treeName}</span></td>
-                    <td><span>${res.treeCount}</span></td>
+                    <td class="tealCen"><span>${res.treeCount}</span></td>
                 </tr>
             </c:forEach>
         </table>
