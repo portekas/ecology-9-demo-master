@@ -232,7 +232,7 @@
         }
 
         //查询利息
-        rs.executeSql("SELECT sum(lx) as lx FROM uf_zjcbmx WHERE xmbh = '"+bid+"'");
+        rs.executeSql("SELECT ISNULL(sum(lx),0) as lx FROM uf_zjcbmx WHERE xmbh = '"+bid+"'");
         json = new JSONObject();
         json.put("fl","zcfl17");
         if(rs.next()){
