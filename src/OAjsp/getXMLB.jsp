@@ -11,6 +11,10 @@
 <%@ page isELIgnored="false"%>
 
 <%
+    /**
+     * 项目经理施工日志，展示项目列表
+     * lg
+     */
     response.setHeader("cache-control", "no-cache");
     response.setHeader("pragma", "no-cache");
     response.setHeader("expires", "Mon 1 Jan 1990 00:00:00 GMT");
@@ -128,6 +132,7 @@
             })
         }
 
+        //回车后搜索
         var res=eval('(${sehArr})');
         document.onkeydown = function (e) {
             var theEvent = window.event || e;

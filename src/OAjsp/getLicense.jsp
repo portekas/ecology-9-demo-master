@@ -10,9 +10,10 @@
 <jsp:useBean id="rci" class="weaver.hrm.resource.ResourceComInfo" scope="page"/>
 
 <%
-    /*
-     查询表中的数据
-    */
+    /**
+     * 简单处理数据方法
+     * lg
+     */
     response.setHeader("cache-control", "no-cache");
     response.setHeader("pragma", "no-cache");
     response.setHeader("expires", "Mon 1 Jan 1990 00:00:00 GMT");
@@ -24,6 +25,9 @@
     User user=HrmUserVarify.getUser(request,response);
     RecordSet rs = new RecordSet();
     if("getXYQZZTZ".equals(operation)){
+        /**
+         * 证照门户统计到期数量（废弃）
+         */
         int day_10 = 0;
         int day_30 = 0;
         int month_12 = 0;
@@ -54,7 +58,11 @@
         json.put("overdue",overdue);
 
         out.print(json);
+
     }else if("getJSWD".equals(operation)){
+        /**
+         * 获取角色文档相关数据
+         */
         List<Map<String,String>> resArr = new ArrayList<>();
         Map<String,String> resMap;
         rs.executeSql("select count(id) as numb from uf_zzylb t1 where datediff(day,getdate(),t1.dqrq) < 11" );
@@ -65,7 +73,11 @@
         }
 
         out.print(resArr);
+
     }else if("getWDXMGZRZMX".equals(operation)){
+        /**
+         * 项目经理施工日志 获取项目经理今日填写的工作日志数据
+         */
         String xmid = Util.null2String(request.getParameter("xmid"));
         String newDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
         rs.executeSql("select id from uf_xmjlgzrz t1 where xmid = '"+xmid+"' and rzrq = '"+newDate+"' and djr = '"+user.getUID()+"'");
@@ -73,7 +85,11 @@
             json.put("id",rs.getString("id"));
         }
         out.print(json);
+
     }else if("getRDPUser".equals(operation)){
+        /**
+         * 获取报表用户名密码
+         */
         rs.executeSql("SELECT id,bbzh,bbmm FROM uf_zhdybbqx WHERE ry like '%,"+user.getUID()+",%' or ry like '"+user.getUID()+",%' or ry like '%,"+user.getUID()+"'");
         if(rs.next()){
             json.put("username",rs.getString("bbzh"));
@@ -83,6 +99,9 @@
         out.print(json);
 
     }else if("addZCPD".equals(operation)){
+        /**
+         * 生成资产盘点
+         */
         rs.executeSql("SELECT COUNT(id) as num FROM uf_gdzcpdqd WHERE pdjhid = "+bid);
         if(rs.next()){
             int num = rs.getInt("num");
@@ -121,6 +140,9 @@
         }
 
     }else if("getbmzcpdd".equals(operation)){
+        /**
+         * 获取部门资产盘点单数据
+         */
         rs.executeSql("SELECT id FROM uf_bmzcpdd WHERE pdjh="+bid+" and pdbm="+par1);
         if(rs.next()){
             json.put("id",rs.getInt("id"));
@@ -129,6 +151,10 @@
         out.print(json);
 
     }else if("getgdzcd".equals(operation)) {
+        /**
+         * 固定资产 数据复制
+         */
+
         rs.executeSql("insert into uf_gdzcd(syqkbz,sybm,zcgzbm,zcgzgs,zp,fj,cfdz,xgcglc,ipdz,zclb,zcbz,dw,sl,cgr,gysmc,sfbf,sfxmb,syr,xmbh,zcxgbm,zclbid,jkzt,aqsz,bgrj,czxt,qtrj,gdzcmc,zclbwb,grrq" +
                 ",zt,cgje,zjnx,pp,xh,jyrq,bgr,bgrszbm,bz,xmmc,xmmclzy,zcbfrq,zcbfczr,zcbfczsm,sfypd,sygs,sffy,formmodeid)" +
                 "(SELECT syqkbz,sybm,zcgzbm,zcgzgs,zp,fj,cfdz,xgcglc,ipdz,zclb,zcbz,dw,sl,cgr,gysmc,sfbf,sfxmb,syr,xmbh,zcxgbm,zclbid,jkzt,aqsz,bgrj,czxt,qtrj,gdzcmc,zclbwb,grrq" +
@@ -141,6 +167,10 @@
         out.print(json);
 
     }else if("getXMXQ".equals(operation)) {
+        /**
+         * 项目经理工作日志 获取项目相关数据
+         */
+
         //月计划
         rs.executeSql("SELECT yjh FROM formtable_main_272_dt1 WHERE xmbh = '" + bid + "' ORDER BY id DESC");
         if (rs.next()) {
@@ -170,6 +200,10 @@
         out.print(json);
 
     }else if("addColdesc".equals(operation)) {
+        /**
+         * 更新OA表单字段说明的字段描述列
+         */
+
         rs.executeSql("SELECT * FROM uf_OAcoldesc WHERE labelid = '" + bid + "'");
         if (rs.next()) {
             rs.executeSql("UPDATE uf_OAcoldesc SET labeldesc = '" + par1 + "' WHERE labelid = '" + bid + "'");
@@ -179,6 +213,10 @@
         out.print(json);
 
     }else if("getXMZTCQX".equals(operation)) {
+        /**
+         * 项目模块，按当前用户的角色获取左侧按钮
+         */
+
         //查询角色
         rs.executeSql("SELECT roleid FROM hrmrolemembers WHERE resourceid = '" + user.getUID() + "'");
         StringBuilder roleIds = new StringBuilder();
@@ -213,12 +251,15 @@
 
 
     }else if("getXMZJLS".equals(operation)) {
-        //默认值
+        /**
+         * 项目模块，获取资金的收入、支出金额
+         */
 
         BigDecimal bd1 = new BigDecimal(0);
         BigDecimal bd2 = new BigDecimal(0);
         BigDecimal bdt;
-        rs.executeSql("SELECT lx,sum(zcje) AS bxje FROM V_xmzjzc vx  WHERE xmbh = '"+bid+"' GROUP BY lx");
+        //查询支出
+        rs.executeSql("SELECT lx,sum(zcje) AS bxje FROM V_xmzjzc vx  WHERE xmbh = '"+bid+"' and rq != '' GROUP BY lx");
         while (rs.next()){
             json = new JSONObject();
             String je = rs.getString("bxje");

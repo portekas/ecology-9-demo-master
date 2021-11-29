@@ -10,6 +10,10 @@
 <jsp:useBean id="rci" class="weaver.hrm.resource.ResourceComInfo" scope="page"/>
 
 <%
+    /**
+     * 证照门户页面
+     * lg
+     */
     response.setHeader("cache-control", "no-cache");
     response.setHeader("pragma", "no-cache");
     response.setHeader("expires", "Mon 1 Jan 1990 00:00:00 GMT");

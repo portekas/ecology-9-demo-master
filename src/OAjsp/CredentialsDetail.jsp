@@ -7,8 +7,9 @@
 <jsp:useBean id="rci" class="weaver.hrm.resource.ResourceComInfo" scope="page"/>
 
 <%
-	/*
-    根据requestid获取对应流程的明细
+	/**
+    * 需延续证照跟进
+    * lg
     */
 	response.setHeader("cache-control", "no-cache");
 	response.setHeader("pragma", "no-cache");

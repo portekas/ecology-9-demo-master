@@ -9,9 +9,10 @@
 <jsp:useBean id="rci" class="weaver.hrm.resource.ResourceComInfo" scope="page"/>
 
 <%
-    /*
-    根据requestid获取对应流程的明细
-    */
+    /**
+     * 视图的批量删除
+     * lg
+     */
     response.setHeader("cache-control", "no-cache");
     response.setHeader("pragma", "no-cache");
     response.setHeader("expires", "Mon 1 Jan 1990 00:00:00 GMT");

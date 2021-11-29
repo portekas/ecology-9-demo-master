@@ -7,8 +7,12 @@
 <jsp:useBean id="rci" class="weaver.hrm.resource.ResourceComInfo" scope="page"/>
 
 <%
+    /**
+     * 帮助文档保存时绑定信息化模块
+     * lg
+     */
     /*
-    拦截内部进行的操作
+        拦截内部进行的操作
     */
     response.setHeader("cache-control", "no-cache");
     response.setHeader("pragma", "no-cache");
