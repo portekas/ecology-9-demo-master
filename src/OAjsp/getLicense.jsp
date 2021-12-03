@@ -259,7 +259,7 @@
         BigDecimal bd2 = new BigDecimal(0);
         BigDecimal bdt;
         //查询支出
-        rs.executeSql("SELECT lx,sum(zcje) AS bxje FROM V_xmzjzc vx  WHERE xmbh = '"+bid+"' and rq != '' GROUP BY lx");
+        rs.executeSql("SELECT lx,sum(zcje) AS bxje FROM V_xmzjzc vx  WHERE xmbh = '"+bid+"' GROUP BY lx");
         while (rs.next()){
             json = new JSONObject();
             String je = rs.getString("bxje");
