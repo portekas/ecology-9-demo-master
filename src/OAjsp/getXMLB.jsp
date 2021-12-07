@@ -44,7 +44,7 @@
     request.setAttribute("sehArr", json);
 %>
 <head>
-    <script type="text/javascript" src="/cloudstore/resource/pc/jquery/jquery-1.8.3.min.js?v=20180320"></script>
+    <script type="text/javascript" src="/cloudstore/resource/pc/jquery/jquery.min.js"></script>
     <style>
         .tableBody{
             width: 100%;
