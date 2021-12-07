@@ -89,7 +89,7 @@
     request.setAttribute("resArr", resArr);
 %>
 <head>
-    <script type="text/javascript" src="/cloudstore/resource/pc/jquery/jquery-1.8.3.min.js?v=20180320"></script>
+    <script type="text/javascript" src="/cloudstore/resource/pc/jquery/jquery.min.js"></script>
     <script type="text/javascript" src="tree.js"></script>
     <link rel="stylesheet" href="tree.css">
 </head>
