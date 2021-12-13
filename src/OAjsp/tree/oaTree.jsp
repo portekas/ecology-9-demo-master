@@ -10,7 +10,7 @@
 
 <%
     /**
-     * OA通用树
+     * OA通用树，数据在OA后端配置中设置，引用后在查询的左侧展示
      * lg
      */
     response.setHeader("cache-control", "no-cache");

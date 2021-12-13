@@ -11,7 +11,7 @@
 
 <%
     /**
-     * 证照门户页面
+     * 证照门户页面，
      * lg
      */
     response.setHeader("cache-control", "no-cache");

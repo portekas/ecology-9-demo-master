@@ -11,7 +11,7 @@
 
 <%
     /**
-     * 开发运维岗位平台页面
+     * 开发运维岗位平台门户页面
      * lg
      */
     response.setHeader("cache-control", "no-cache");

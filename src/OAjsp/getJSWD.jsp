@@ -10,7 +10,7 @@
 
 <%
     /**
-     * 角色文档页面
+     * 角色相关文档展示页面，数据在OA后端配置中设置，在门户页面中展示
      * lg
      */
     response.setHeader("cache-control", "no-cache");

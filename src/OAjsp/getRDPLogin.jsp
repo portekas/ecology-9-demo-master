@@ -9,7 +9,8 @@
 
 <%
     /**
-     * 门户报表页面
+     * 岗位门户报表列表显示页面
+     * gwid:岗位对应报表配置ID
      * lg
      */
     response.setHeader("cache-control", "no-cache");

@@ -8,7 +8,7 @@
 
 <%
 	/**
-    * 需延续证照跟进
+    * 需延续证照跟进，需延续证照查询中，跟进操作调用
     * lg
     */
 	response.setHeader("cache-control", "no-cache");

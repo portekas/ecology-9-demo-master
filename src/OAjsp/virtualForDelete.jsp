@@ -22,6 +22,8 @@
     if(StringUtils.isBlank(bid)){
         return;
     }
+
+    //我的专项工作批量删除
     if("v_zxgz".equals(operation)){
         rs.executeSql("delete uf_zxgzzb_dt1 where mainid in ("+bid+")");
         rs.executeSql("delete uf_zxgzzb where id in ("+bid+")");

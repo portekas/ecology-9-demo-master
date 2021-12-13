@@ -9,7 +9,13 @@
 
 <%
     /**
-     * 通用获取数据库的值
+     *
+     * 通用JS,方便调用 获取数据库的值
+     * taName 表名
+     * field 列名
+     * con 条件
+     *
+     * 刘港
      */
     response.setHeader("cache-control", "no-cache");
     response.setHeader("pragma", "no-cache");
