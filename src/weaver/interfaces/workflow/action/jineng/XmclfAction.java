@@ -30,7 +30,7 @@ public class XmclfAction implements Action {
         Double bxje0 = Double.parseDouble(bxje);
         String kmkyys0 = Util.null2String(mainTable.get("kmkyys"));
         String clkm = Util.null2String(mainTable.get("fykm"));//需要控制的科目 材料费、人工费、业务费
-        if (kmkyys0.isEmpty()) {
+        if (Arrays.asList(xkzclkm).contains(clkm) && kmkyys0.isEmpty()) {
             requestInfo.getRequestManager().setMessagecontent("该项目未申请相关科目预算，流程无法提交");
             return FAILURE_AND_CONTINUE;
         } else {

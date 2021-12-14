@@ -32,7 +32,7 @@ public class XmfyAction implements Action {
             Double mx1bxje0 = Double.parseDouble(mx1bxje);
             String sykfkje0 = Util.null2String(detailTable.get("sykfkje"));
             String clkm = Util.null2String(detailTable.get("bxkm"));//需要控制的科目 材料费、人工费、业务费
-            if (sykfkje0.isEmpty()) {
+            if (Arrays.asList(xkzclkm).contains(clkm) && sykfkje0.isEmpty()) {
                 requestInfo.getRequestManager().setMessagecontent("剩余可付款金额不能为空，流程无法提交");
                 return FAILURE_AND_CONTINUE;
             } else {
