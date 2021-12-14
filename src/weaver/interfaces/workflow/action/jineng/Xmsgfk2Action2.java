@@ -18,6 +18,10 @@ import weaver.workflow.request.RequestManager;
 // Referenced classes of package weaver.interfaces.workflow.action.jineng:
 //            RequestTableInfoToMap
 
+/**
+ * 2021-12-13 刘港
+ * 添加判断，只验证材料费、人工费、业务费 的报销金额是否大于剩余可付款金额
+ */
 public class Xmsgfk2Action2 implements Action
 {
 
