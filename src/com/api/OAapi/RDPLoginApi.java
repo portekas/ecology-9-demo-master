@@ -18,9 +18,8 @@ import javax.ws.rs.core.MediaType;
 public class RDPLoginApi {
 
     /**
-     * 查询报表权限
-     * @param req
-     * @param res
+     * 查询报表权限API，提供给RDP报表使用获取是否有权限打开报表，有权限返回 1 无权限返回 0
+     * 查询报表权限配置列表
      * @return
      */
     @Path("/rdplogin")
@@ -31,8 +30,8 @@ public class RDPLoginApi {
         JSONObject json = new JSONObject();
         RecordSet xmbRec = new RecordSet();
         String bbid = Util.null2String(req.getParameter("bbid"));
-        String xmbsql = "SELECT COUNT(uz.id) as userNum FROM uf_zhdybbqx uz " +
-                "WHERE uz.dybbid = '"+bbid+"' and (uz.ry like '%,"+user.getUID()+",%' or uz.ry like '"+user.getUID()+",%' or uz.ry like '%,"+user.getUID()+"' or uz.ry is null)";
+        String xmbsql = "SELECT COUNT(uz.id) as userNum FROM uf_zhdybbqx uz LEFT JOIN uf_xxhmk uxk ON uxk.id = uz.bb" +
+                " WHERE uxk.bblj = '"+bbid+"' and (cast(uz.ry as varchar(99)) = '"+user.getUID()+"' or uz.ry like '%,"+user.getUID()+",%' or uz.ry like '"+user.getUID()+",%' or uz.ry like '%,"+user.getUID()+"' or (sfgk = '1' AND ry IS NULL))";
         xmbRec.execute(xmbsql);
         if(xmbRec.next()){
             json.put("userNum",xmbRec.getString("userNum"));
