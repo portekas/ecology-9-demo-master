@@ -22,11 +22,11 @@
     Map<String,String> resMap;
     String gwid = Util.null2String(request.getParameter("gwid"));
     if(gwid != ""){
-        rs.executeSql("SELECT bbmczw,bbid FROM uf_jswdgl_dt2 where mainid = " + gwid +" order by px");
+        rs.executeSql("SELECT ux.mkmc,ux.bblj FROM uf_jswdgl_dt2 uj LEFT JOIN uf_xxhmk ux ON ux.id = uj.bbmc where mainid = " + gwid +" order by px");
         while(rs.next()){
             resMap = new HashMap<>();
-            resMap.put("bbmczw",rs.getString("bbmczw"));
-            resMap.put("bbid",rs.getString("bbid"));
+            resMap.put("bbmczw",rs.getString("mkmc"));
+            resMap.put("bbid",rs.getString("bblj"));
             resArr.add(resMap);
         }
     }
