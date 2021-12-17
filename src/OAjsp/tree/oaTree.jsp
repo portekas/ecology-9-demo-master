@@ -53,7 +53,10 @@
                 String[] ry = ryxxcs.split(",");
                 String[] tj = dytjbzd.split(",");
                 for(int i = 0; i< ry.length; i++){
-                    con.append(" AND ").append(tj[i]).append(" = '").append(rs1.getString(ry[i])).append("'");
+                    if(con.length() != 0){
+                        con.append(" AND ");
+                    }
+                    con.append(tj[i]).append(" = '").append(rs1.getString(ry[i])).append("'");
                 }
             }
         }
