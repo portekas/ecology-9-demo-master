@@ -12,9 +12,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 2021-12-13 刘港
- * 添加判断，只验证材料费、人工费、业务费 的报销金额是否大于剩余可付款金额
+ * 项目费用流程申请节点控制预算相关
+ * 验证预算是否超过申请额度，保存付款记录
  */
+
+/**
+ * 创建 泛微二开人员
+ * 修改 2021-12-13 刘港  添加判断，只验证材料费、人工费、业务费 的报销金额是否大于剩余可付款金额
+ *
+ */
+
 public class XmfyAction implements Action {
     @Override
     public String execute(RequestInfo requestInfo) {
@@ -42,7 +49,8 @@ public class XmfyAction implements Action {
                     return FAILURE_AND_CONTINUE;
                 } else {
                     if (mxid.isEmpty()) {
-                        requestInfo.getRequestManager().setMessagecontent("明细id不能为空，流程无法提交");
+                        requestInfo.getRequestManager().setMessagecontent("报销科目没有申请预算，请先提交“项目-预算审批单”流程来为该项目申请预算");
+//                        requestInfo.getRequestManager().setMessagecontent("明细id不能为空，流程无法提交");
                         return FAILURE_AND_CONTINUE;
                     }
                     //获取项目台账明细表数据

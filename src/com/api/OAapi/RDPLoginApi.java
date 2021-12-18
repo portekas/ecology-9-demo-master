@@ -20,6 +20,8 @@ public class RDPLoginApi {
     /**
      * 查询报表权限API，提供给RDP报表使用判断是否有权限打开报表，有权限返回 1 无权限返回 0
      * 查询报表权限配置列表
+     * 创建 2021-12-16 刘港
+     *
      * @return
      */
     @Path("/rdplogin")
