@@ -11,7 +11,8 @@
 <%
     /**
      * OA通用树，数据在OA后端配置中设置，引用后在查询的左侧展示
-     * lg
+     * 创建 2021-11-23 刘港
+     * 修改 2021-12-20 刘港 调整通用树滚动条样式，调整统计数据小于2条时默认隐藏树
      */
     response.setHeader("cache-control", "no-cache");
     response.setHeader("pragma", "no-cache");
@@ -98,7 +99,14 @@
 </head>
 <body onload="">
 <div>
-    <div id="weleft" class="wea-left-right-layout-left ant-col-xs-8 ant-col-sm-7 ant-col-md-6 ant-col-lg-5 weleft" >
+    <c:choose>
+        <c:when test="${resArr.size() > 1 }">
+            <div id="weleft" class="wea-left-right-layout-left ant-col-xs-8 ant-col-sm-7 ant-col-md-6 ant-col-lg-5 weleft">
+        </c:when>
+        <c:otherwise>
+            <div id="weleft" class="wea-left-right-layout-left ant-col-xs-0 ant-col-sm-0 ant-col-md-0 ant-col-lg-0">
+        </c:otherwise>
+    </c:choose>
         <div class="ant-row wea-new-top" style="border-bottom: 1px solid #e2e2e2">
             <div class="ant-col-14" style="padding-left: 20px; line-height: 50px;">
                 <div class="wea-new-top-title wea-f14">
@@ -107,11 +115,18 @@
                 </div>
             </div>
         </div>
-        <table id="tableBody" class="tableBody">
+        <table class="tableBody">
             <tr>
                 <th>名称</th>
                 <th>数量</th>
             </tr>
+        </table>
+        <div class="table2">
+        <table id="tableBody" class="tableBody ">
+            <colgroup>
+                <COL style="width: 130px">
+                <COL >
+            </colgroup>
             <tr onclick="attifram('${ljdz}')">
                 <td><span>全部</span></td>
                 <td class="tealCen"><span>${sum}</span></td>
@@ -123,6 +138,7 @@
                 </tr>
             </c:forEach>
         </table>
+        </div>
     </div>
     <!--右侧-->
     <div ecid="" class="wea-left-right-layout-right">
