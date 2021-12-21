@@ -5,6 +5,7 @@
 <%@ page import="weaver.hrm.*" %>
 <%@ page import="org.json.JSONObject" %>
 <%@ page import="org.apache.commons.lang.StringUtils" %>
+<%@ page import="java.util.regex.Matcher" %>
 <%@ page trimDirectiveWhitespaces="true" %>
 <%@ page isELIgnored="false"%>
 
@@ -13,6 +14,7 @@
      * OA通用树，数据在OA后端配置中设置，引用后在查询的左侧展示
      * 创建 2021-11-23 刘港
      * 修改 2021-12-20 刘港 调整通用树滚动条样式，调整统计数据小于2条时默认隐藏树
+     * 修改 2021-12-21 刘港 添加当前人员ID、人员部门ID替换
      */
     response.setHeader("cache-control", "no-cache");
     response.setHeader("pragma", "no-cache");
@@ -65,6 +67,8 @@
         //拼接统计sql
         String sql = rs.getString("tjsql");
         String fzcs = rs.getString("fzcs");
+        sql = sql.replaceAll(Matcher.quoteReplacement("$")+"UserId"+Matcher.quoteReplacement("$"),String.valueOf(user.getUID()));
+        sql = sql.replaceAll(Matcher.quoteReplacement("$")+"DepartmentId"+Matcher.quoteReplacement("$"),String.valueOf(user.getUserDepartment()));
         if(StringUtils.isNotBlank(fzcs)){
             for(String cs:gdcs.split(",")){
                 fzcs = fzcs.replace("$"+cs+"$",resMap.get(cs));
