@@ -128,16 +128,16 @@
         <div class="table2">
         <table id="tableBody" class="tableBody ">
             <colgroup>
-                <COL style="width: 130px">
+                <COL style="width: 180px">
                 <COL >
             </colgroup>
             <tr onclick="attifram('${ljdz}')">
-                <td><span>全部</span></td>
+                <td><span>&emsp;&emsp;全部</span></td>
                 <td class="tealCen"><span>${sum}</span></td>
             </tr>
             <c:forEach items="${resArr}" var="res">
                 <tr onclick="attifram('${ljdz}&${dtcs}=${res.treeID}')">
-                    <td><span>${res.treeName}</span></td>
+                    <td><span>&emsp;&emsp;${res.treeName}</span></td>
                     <td class="tealCen"><span>${res.treeCount}</span></td>
                 </tr>
             </c:forEach>

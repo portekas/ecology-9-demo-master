@@ -136,11 +136,24 @@ body{
 }
 
 .tealCen {
-    text-align: center;
+    text-align: left;
 }
 
 .weleft {
     width: 250px;
     /*overflow: auto;*/
-    margin-left: 10px;
+    /*margin-left: 10px;*/
+}
+::-webkit-scrollbar{
+    width: 10px;
+    height: 10px;
+    background-color: transparent;
+}
+::-webkit-scrollbar-thumb{
+    border-radius: 10px;
+    background-color: #ccc;
+    -webkit-box-shadow: none;
+}
+::-webkit-scrollbar-track{
+    background-color: transparent;
 }
