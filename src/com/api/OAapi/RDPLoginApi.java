@@ -37,7 +37,16 @@ public class RDPLoginApi {
         xmbRec.execute(xmbsql);
         if(xmbRec.next()){
             json.put("userNum",xmbRec.getString("userNum"));
+            json.put("userID",user.getUID());
+            json.put("userDept",user.getUserDepartment());
         }
+        String xgbm = "select field8 AS xgbm from cus_fielddata WHERE id = '"+user.getUID()+"' AND scopeid = '-1'";
+        xmbRec.execute(xgbm);
+        String xgbmid = "";
+        if(xmbRec.next()){
+            xgbmid = xmbRec.getString("xgbm");
+        }
+        json.put("userxgbm",xgbmid);
         return json;
     }
 }
