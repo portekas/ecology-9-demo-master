@@ -49,6 +49,19 @@ public class RDPLoginApi {
             xgbmid = xmbRec.getString("xgbm");
         }
         json.put("userxgbm",xgbmid);
+
+
+        //查询子部门
+        String zbm = "SELECT id FROM HrmDepartment hd WHERE hd.supdepid = '"+user.getUserDepartment()+"' AND (hd.canceled != 1 OR hd.canceled IS NULL)";
+        xmbRec.execute(zbm);
+        StringBuilder zbmid = new StringBuilder();
+        while (xmbRec.next()){
+            if(zbmid.length() != 0 ){
+                zbmid.append(",");
+            }
+            zbmid.append(xmbRec.getString("id"));
+        }
+        json.put("userzbm",zbmid.toString());
         return json;
     }
 }
