@@ -21,12 +21,12 @@ public class RDPLoginApi {
      * 查询报表权限API，提供给RDP报表使用判断是否有权限打开报表，有权限返回 1 无权限返回 0
      * 查询报表权限配置列表
      * 创建 2021-12-16 刘港
-     * 修改 2021-12-21 刘港 返回参数中添加当前登录人ID、部门ID、相关部门ID
+     * 修改 2021-12-21 刘港 返回参数中添加当前登录人ID、部门ID、相关部门ID、子部门ID
      *
      * @return
      */
-    @Path("/rdplogin")
     @GET
+    @Path("/rdplogin")
     @Produces(MediaType.APPLICATION_JSON)
     public JSONObject rdplogin(@Context HttpServletRequest req, @Context HttpServletResponse res) {
         User user= HrmUserVarify.getUser(req,res);
@@ -62,6 +62,24 @@ public class RDPLoginApi {
             zbmid.append(xmbRec.getString("id"));
         }
         json.put("userzbm",zbmid.toString());
+        return json;
+    }
+
+    //验证报表是否保密
+    @GET
+    @Path("/rdpIsConfidential")
+    @Produces(MediaType.APPLICATION_JSON)
+    public JSONObject isConfidential(@Context HttpServletRequest req, @Context HttpServletResponse res) {
+        JSONObject json = new JSONObject();
+        RecordSet xmbRec = new RecordSet();
+        String isCon = "0";
+        String bbid = Util.null2String(req.getParameter("bbid"));
+        String xmbsql = "SELECT sfbmbb FROM uf_zhdybbqx uz LEFT JOIN uf_xxhmk uxk ON uxk.id = uz.bb WHERE uxk.bblj = '"+bbid+"' ";
+        xmbRec.execute(xmbsql);
+        if(xmbRec.next() && "1".equals(xmbRec.getString("sfbmbb"))){
+            isCon = "1";
+        }
+        json.put("isCon",isCon);
         return json;
     }
 }
