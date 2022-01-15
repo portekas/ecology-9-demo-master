@@ -11,8 +11,19 @@
 
 <%
     /**
-     * 简单处理数据方法
-     * lg
+     * 创建 刘港 各种简单处理数据方法合集
+     * getXYQZZTZ ：证照门户统计到期数量（废弃）
+     * getJSWD : 获取角色文档相关数据
+     * getWDXMGZRZMX : 项目经理施工日志 获取项目经理今日填写的工作日志数据
+     * getRDPUser ：获取报表用户名密码
+     * addZCPD ：生成资产盘点
+     * getbmzcpdd ：获取部门资产盘点单数据
+     * getgdzcd ：固定资产 数据复制
+     * getXMXQ ：项目经理工作日志 获取项目相关数据
+     * addColdesc ：更新OA表单字段说明的字段描述列
+     * getXMZTCQX ：项目模块，按当前用户的角色获取左侧按钮
+     * getXMZJLS ： 项目模块，获取资金的收入、支出金额
+     * 新增 刘港 2022-01-14 新增会议交办事项跟进记录提交方法
      */
     response.setHeader("cache-control", "no-cache");
     response.setHeader("pragma", "no-cache");
@@ -168,7 +179,7 @@
 
     }else if("getXMXQ".equals(operation)) {
         /**
-         * 项目经理工作日志 获取项目相关数据
+         *
          */
 
         //月计划
@@ -347,6 +358,36 @@
 
         out.clear();
         out.print(objArr);
+
+    }else if("addHYJBSXGJ".equals(operation)) {
+        //添加会议交办事项跟进记录
+
+        String fmdid = Util.null2String(request.getParameter("fmdid"));//事项ID
+        String gjjl = Util.null2String(request.getParameter("gjjl"));//跟进内容
+        String sxzt = Util.null2String(request.getParameter("sxzt"));//事项状态
+        //登记人、所属部门、所属公司、跟进记录、事项状态、事项ID、跟进时间
+        StringBuilder sb = new StringBuilder();
+        sb.append(user.getUID());
+        sb.append(",");
+        sb.append(user.getUserDepartment());
+        sb.append(",");
+        sb.append(user.getUserSubCompany1());
+        sb.append(",");
+        sb.append("'");
+        sb.append(gjjl);
+        sb.append("'");
+        sb.append(",");
+        sb.append(sxzt);
+        sb.append(",");
+        sb.append(fmdid);
+        sb.append(",");
+        sb.append("'");
+        sb.append(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+        sb.append("'");
+
+        rs.executeSql("INSERT INTO uf_hyjbsxgjjl (djr,szbm,szgs,gjjl,sxzt,sxid,gjsj,formmodeid) " +
+                "VALUES(" + sb.toString() + ",278)");
+        out.print(json);
     }
 
 %>
