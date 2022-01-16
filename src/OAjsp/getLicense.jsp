@@ -365,6 +365,7 @@
         String fmdid = Util.null2String(request.getParameter("fmdid"));//事项ID
         String gjjl = Util.null2String(request.getParameter("gjjl"));//跟进内容
         String sxzt = Util.null2String(request.getParameter("sxzt"));//事项状态
+        String gjlx = Util.null2String(request.getParameter("gjlx"));//跟进类型
         //登记人、所属部门、所属公司、跟进记录、事项状态、事项ID、跟进时间
         StringBuilder sb = new StringBuilder();
         sb.append(user.getUID());
@@ -384,8 +385,10 @@
         sb.append("'");
         sb.append(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
         sb.append("'");
+        sb.append(",");
+        sb.append(gjlx);
 
-        rs.executeSql("INSERT INTO uf_hyjbsxgjjl (djr,szbm,szgs,gjjl,sxzt,sxid,gjsj,formmodeid) " +
+        rs.executeSql("INSERT INTO uf_hyjbsxgjjl (djr,szbm,szgs,gjjl,sxzt,sxid,gjsj,gjlx,formmodeid) " +
                 "VALUES(" + sb.toString() + ",278)");
         out.print(json);
     }

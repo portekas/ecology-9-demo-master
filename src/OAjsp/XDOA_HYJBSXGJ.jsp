@@ -18,6 +18,7 @@
     response.setHeader("pragma", "no-cache");
     response.setHeader("expires", "Mon 1 Jan 1990 00:00:00 GMT");
     String fmdid = Util.null2String(request.getParameter("fmdid"));
+    String gjlx = Util.null2String(request.getParameter("gjlx"));
     RecordSet rs = new RecordSet();
     List<Map<String,String>> resArr = new ArrayList<>();
     Map<String,String> resMap = new HashMap<>();
@@ -33,6 +34,7 @@
     }
     request.setAttribute("resArr", resArr);
     request.setAttribute("fmdid", fmdid);
+    request.setAttribute("gjlx", gjlx);
     request.setAttribute("newDate", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
 %>
 
@@ -101,13 +103,14 @@
 
         function saveDialog() {
             var fmdid = "${fmdid}";
+            var gjlx = "${gjlx}";
             var gjjl = $("#gjjl").val();
             var sxzt = $("#sxzt").val();
             $.ajax({
                 url: "/OAjs/getLicense.jsp?operation=addHYJBSXGJ",
                 // type: "post",
                 async: false,
-                data: "fmdid=" + fmdid+"&gjjl="+gjjl+"&sxzt="+sxzt,
+                data: "fmdid=" + fmdid+"&gjjl="+gjjl+"&sxzt="+sxzt+"&gjlx="+gjlx,
                 success: function doSuccess(msg) {
                     window.parent.ModeForm.closeCustomDialog();
                     window.parent.ModeList.reloadTable();
