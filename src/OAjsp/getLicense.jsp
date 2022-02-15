@@ -24,6 +24,7 @@
      * getXMZTCQX ：项目模块，按当前用户的角色获取左侧按钮
      * getXMZJLS ： 项目模块，获取资金的收入、支出金额
      * 新增 刘港 2022-01-14 新增会议交办事项跟进记录提交方法
+     * 修改 刘港 2022-02-15  修改 getXMZTCQX 添加查询是否本项目组成员，添加查询岗位对应按钮
      */
     response.setHeader("cache-control", "no-cache");
     response.setHeader("pragma", "no-cache");
@@ -228,33 +229,47 @@
          * 项目模块，按当前用户的角色获取左侧按钮
          */
 
-        //查询角色
-        rs.executeSql("SELECT roleid FROM hrmrolemembers WHERE resourceid = '" + user.getUID() + "'");
-        StringBuilder roleIds = new StringBuilder();
-        while (rs.next()){
-            String rid = rs.getString("roleid");
-            if(!"".equals(roleIds.toString())){
-                roleIds.append(",");
-            }
-            roleIds.append(rid);
-        }
-        //查询角色对应按钮
-        rs.executeSql("SELECT an FROM uf_xmztcqxpz_dt1 uxd LEFT JOIN uf_xmztcqxpz ux ON  ux.id = uxd.mainid WHERE cast(ux.js as varchar(max)) in("+roleIds.toString()+")");
-        StringBuilder ans = new StringBuilder();
-        while (rs.next()){
-            if(!"".equals(ans.toString())){
-                ans.append(",");
-            }
-            ans.append(rs.getString("an"));
-        }
-        //查询按钮
-        if(!"".equals(ans.toString())){
-            rs.executeSql("select anmc,ffm from uf_xmztcanpz where id in ("+ ans.toString() +") order by px");
+        //查询是否本项目组成员
+        rs.executeSql("SELECT 1 FROM uf_xmzcy WHERE xm = '" + user.getUID() + "' AND xmbh = '"+bid+"'");
+        if(rs.next()){//是本项目组成员
+            rs.executeSql("select anmc,ffm from uf_xmztcanpz order by px");
             while (rs.next()){
                 json = new JSONObject();
                 json.put("anmc",rs.getString("anmc"));
                 json.put("ffm",rs.getString("ffm"));
                 objArr.add(json);
+            }
+
+        }else{//否
+            //查询角色
+            rs.executeSql("SELECT roleid FROM hrmrolemembers WHERE resourceid = '" + user.getUID() + "'");
+            StringBuilder roleIds = new StringBuilder();
+            while (rs.next()){
+                String rid = rs.getString("roleid");
+                if(!"".equals(roleIds.toString())){
+                    roleIds.append(",");
+                }
+                roleIds.append(rid);
+            }
+            //查询角色、岗位对应按钮
+            rs.executeSql("SELECT an FROM uf_xmztcqxpz_dt1 uxd LEFT JOIN uf_xmztcqxpz ux ON  ux.id = uxd.mainid" +
+                    " WHERE gw = "+ user.getJobtitle() +" or cast(ux.js as varchar(max)) in("+roleIds.toString()+")");
+            StringBuilder ans = new StringBuilder();
+            while (rs.next()){
+                if(!"".equals(ans.toString())){
+                    ans.append(",");
+                }
+                ans.append(rs.getString("an"));
+            }
+            //查询按钮
+            if(!"".equals(ans.toString())){
+                rs.executeSql("select anmc,ffm from uf_xmztcanpz where id in ("+ ans.toString() +") order by px");
+                while (rs.next()){
+                    json = new JSONObject();
+                    json.put("anmc",rs.getString("anmc"));
+                    json.put("ffm",rs.getString("ffm"));
+                    objArr.add(json);
+                }
             }
         }
         out.clear();
