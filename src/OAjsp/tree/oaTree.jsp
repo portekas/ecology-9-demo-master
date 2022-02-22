@@ -15,6 +15,7 @@
      * 创建 2021-11-23 刘港
      * 修改 2021-12-20 刘港 调整通用树滚动条样式，调整统计数据小于2条时默认隐藏树
      * 修改 2021-12-21 刘港 添加当前人员ID、人员部门ID替换
+     * 修改 2022-02-22 刘港 添加隐藏数值功能
      */
     response.setHeader("cache-control", "no-cache");
     response.setHeader("pragma", "no-cache");
@@ -25,13 +26,14 @@
     Map<String,String> resMap = new HashMap<>();
     Map<String,Object> treeMap = new HashMap<>();
     RecordSet rs = new RecordSet();
-    rs.executeSql("SELECT sxmc,ljdz,gdcs,dtcs,fzcs,tjsql,ryxxcs,dytjbzd FROM uf_oatys WHERE id = "+bid);
+    rs.executeSql("SELECT sxmc,ljdz,gdcs,dtcs,fzcs,tjsql,ryxxcs,dytjbzd,sfxssz FROM uf_oatys WHERE id = "+bid);
     if(rs.next()){
         StringBuilder lj = new StringBuilder();
         String sxmc = rs.getString("sxmc");//树形名称
         String ljdz = rs.getString("ljdz");//连接地址
         String gdcs = rs.getString("gdcs");//固定参数
         String dtcs = rs.getString("dtcs");//动态参数
+        String sfxssz = rs.getString("sfxssz");//是否显示数值
         lj.append(ljdz);
         if(StringUtils.isNotBlank(gdcs)){
             for(String p:gdcs.split(",")){
@@ -43,6 +45,7 @@
         request.setAttribute("ljdz", lj.toString());
         request.setAttribute("sxmc", sxmc);
         request.setAttribute("dtcs", dtcs);
+        request.setAttribute("sfxssz", sfxssz);
 
         //查询人员表信息拼接统计sql
         String ryxxcs = rs.getString("ryxxcs");
@@ -122,7 +125,9 @@
         <table class="tableBody">
             <tr>
                 <th>名称</th>
-                <th>数量</th>
+                <c:if test="${sfxssz != 1}">
+                    <th>数量</th>
+                </c:if>
             </tr>
         </table>
         <div class="table2">
@@ -133,12 +138,16 @@
             </colgroup>
             <tr onclick="attifram('${ljdz}')">
                 <td><span>&emsp;&emsp;全部</span></td>
-                <td class="tealCen"><span>${sum}</span></td>
+                <c:if test="${sfxssz != 1}">
+                    <td class="tealCen"><span>${sum}</span></td>
+                </c:if>
             </tr>
             <c:forEach items="${resArr}" var="res">
                 <tr onclick="attifram('${ljdz}&${dtcs}=${res.treeID}')">
                     <td><span>&emsp;&emsp;${res.treeName}</span></td>
-                    <td class="tealCen"><span>${res.treeCount}</span></td>
+                    <c:if test="${sfxssz != 1}">
+                        <td class="tealCen"><span>${res.treeCount}</span></td>
+                    </c:if>
                 </tr>
             </c:forEach>
         </table>
