@@ -25,9 +25,11 @@ import java.util.zip.ZipInputStream;
 
 /**
  * 创建 刘港 2022-3-1 解析毛利表附件，将数据插入明细1、明细2，计算出明细3并插入
+ * 修改 刘港 2022-3-9 添加从excel中获取预算清单数据并插入预算清单台账中
+ * 修改 刘港 2022-3-10 添加计算毛利三的毛利金额和毛利率
  */
-public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
-    private Log log = LogFactory.getLog(AnalyzeMLB.class.getName());
+public class AnalyzeMLB5 extends AbstractModeExpandJavaCodeNew {
+    private Log log = LogFactory.getLog(AnalyzeMLB5.class.getName());
 
     public Map<String, String> doModeExpand(Map<String, Object> param) {
         Map<String, String> result = new HashMap<String, String>();
@@ -38,6 +40,8 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
             String xmmc = "";//项目ID
             String xmbh = "";//项目编号
             String mlbfj = "";//毛利表附件ID
+            String fpsl = "";//发票税率
+            String xmlb = "";//项目类别 2 外协
             RequestInfo requestInfo = (RequestInfo) param.get("RequestInfo");
             if (requestInfo != null) {
                 billid = Util.getIntValue(requestInfo.getRequestid());
@@ -45,11 +49,21 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
 
                 if (billid > 0 && modeid > 0) {
                     RecordSet rs = new RecordSet();
-                    rs.executeQuery("SELECT xmmc,xmbh,mlbfj FROM uf_mlbtz WHERE id = ?", new Object[]{billid});
+                    rs.executeQuery("SELECT xmmc,xmbh,mlbfj,fpsl FROM uf_mlbtz WHERE id = ?", new Object[]{billid});
                     if (rs.next()) {
                         xmmc = Util.null2String(rs.getString("xmmc"));
                         xmbh = Util.null2String(rs.getString("xmbh"));
                         mlbfj = Util.null2String(rs.getString("mlbfj"));
+                        fpsl = Util.null2String(rs.getString("fpsl"));
+
+                        if(StringUtils.isNotBlank(fpsl)){
+                            new Exception("发票税率不能为空");
+                        }
+
+                        rs.executeQuery("select xmlb from uf_xmb where id = ?",new Object[]{xmmc});
+                        if(rs.next()){
+                            xmlb = Util.null2String(rs.getString("xmlb"));
+                        }
                     }
 
                     //无附件信息直接结束
@@ -62,10 +76,10 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
                     List<Map<String, String>> mllist = fileAnalyze(hssfWorkbook);
 
                     //计算毛利三
-                    calML3(mllist);
+                    calML3(mllist,fpsl,xmlb);
 
                     //保存毛利数据到明细中
-                    addMLDetail(mllist,billid);
+                    addMLDetail(mllist,billid,xmmc);
 
                     //获取预算清单
                     List<Object[]> qdlist = fileAnalyzeYSQD(hssfWorkbook,xmmc,xmbh);
@@ -187,7 +201,7 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
      * 计算毛利三
      * @param mllist 明细集合
      */
-    public void calML3(List<Map<String,String>> mllist){
+    public void calML3(List<Map<String,String>> mllist,String fpsl,String xmlb) throws Exception{
         Map<String,String> mlmap = new HashMap<>();
         //1、设备材料费
         mlmap.put("km0",mllist.get(0).get("km5"));
@@ -210,6 +224,10 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
         //7、建造师费用
         mlmap.put("km6",mllist.get(0).get("km12"));
         mlmap.put("je6","");
+        //2 外协
+        if("2".equals(xmlb)){
+            mlmap.put("je6",mllist.get(0).get("je12"));
+        }
         //8、施工过程业务费
         mlmap.put("km7",mllist.get(0).get("km13"));
         mlmap.put("je7",mllist.get(0).get("je13"));
@@ -225,9 +243,22 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
         //（3）其他
         mlmap.put("km11",mllist.get(1).get("km35"));
         mlmap.put("je11",mllist.get(1).get("je35"));
-        //
+
+        //收入金额 合同额/发票税率
+        Double sr = stringToDou(mllist.get(0).get("je3"))/(stringToDou(fpsl)/100);
+        //成本
+        Double cb = stringToDou(mlmap.get("je0"))+stringToDou(mlmap.get("je1"))+stringToDou(mlmap.get("je2"))
+                +stringToDou(mlmap.get("je3"))+stringToDou(mlmap.get("je4"))+stringToDou(mlmap.get("je6"))+stringToDou(mlmap.get("je7"))
+                +stringToDou(mlmap.get("je9"))+stringToDou(mlmap.get("je10"))+stringToDou(mlmap.get("je11"));
+
+        mlmap.put("km12","毛利金额");
+        mlmap.put("je12",String.valueOf(sr - cb));
+        mlmap.put("km13","毛利率");
+        mlmap.put("je13",String.valueOf((sr - cb)/sr));
+
+        //记录开始结算游标
         mlmap.put("start","0");
-        mlmap.put("end","12");
+        mlmap.put("end","14");
         mllist.add(mlmap);
     }
 
@@ -236,7 +267,7 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
      * @param st 数字字符串
      * @return
      */
-    public double stringToDou(String st){
+    public double stringToDou(String st) throws Exception{
         if(StringUtils.isNotBlank(st)){
             return Double.parseDouble(st);
         }
@@ -247,7 +278,7 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
      * 保存毛利明细
      * @param mllist 明细集合
      */
-    public void addMLDetail(List<Map<String,String>> mllist,int mainid){
+    public void addMLDetail(List<Map<String,String>> mllist,int mainid,String xmid) throws Exception{
         RecordSet rs = new RecordSet();
         for(int i=0; i< mllist.size(); i++){
             Map<String,String> amap = mllist.get(i);
@@ -260,6 +291,12 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
                         , new Object[]{mainid,amap.get("km"+j),stringForMat(amap.get("km"+j),amap.get("je"+j)),j-Integer.valueOf(amap.get("start"))});
             }
         }
+
+        //更新项目表中的毛利值
+        rs.executeUpdate("update uf_xmb set ml1 = ? , ml2 = ? , ml3 = ? where id = ?",
+                new Object[]{mllist.get(0).get("je18"),mllist.get(1).get("je37"),mllist.get(2).get("je13"),xmid});
+        log.error("update uf_xmb set ml1 = "+mllist.get(0).get("je14")+" , ml2 = "+mllist.get(1).get("je37")+" , ml3 = "+mllist.get(2).get("je13")
+                +" where id = "+xmid);
     }
 
     /**
@@ -267,7 +304,7 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
      * @param st 金额
      * @return
      */
-    public String stringForMat(String km,String st){
+    public String stringForMat(String km,String st) throws Exception{
         if(StringUtils.isNotBlank(st)) {
             if (km.indexOf("率") > -1) {
                 return (String.format("%.2f", Double.valueOf(st) * 100)) + "%";
@@ -289,6 +326,11 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
 
         //解析预算清单
         XSSFSheet sheetAt = hssfWorkbook.getSheetAt(1);
+        String sheetname = sheetAt.getSheetName();
+        //第二页签不是预算明细则不用解析
+        if(sheetname.indexOf("预算") == -1){
+            return mllist;
+        }
         // 总行数
         int totoalRows = sheetAt.getLastRowNum();
         //遍历明细
@@ -312,12 +354,14 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
      * @param yslist 预算清单集合
      * @param mainid 主建模id
      */
-    public void addYQDetail(List<Object[]> yslist,int mainid){
+    public void addYQDetail(List<Object[]> yslist,int mainid) throws Exception{
         RecordSet rs = new RecordSet();
-        rs.execute("delete uf_gcysqd where mainid = "+mainid);
-        for(int i=0; i< yslist.size(); i++){
-            rs.executeUpdate("INSERT INTO uf_gcysqd (qdxmc,qdxsm,pp,ggxh,qdxdw,qdxsl,dj,zj,xmmc,gcxmbh,mainid,formmodeid,qdxfl)" +
-                            " VALUES (?,?,?,?,?,?,?,?,?,?,"+mainid+",58,0)" ,yslist.get(i));
+        if(yslist != null && yslist.size() > 0){
+            rs.execute("delete uf_gcysqd where mainid = "+mainid);
+            for(int i=0; i< yslist.size(); i++){
+                rs.executeUpdate("INSERT INTO uf_gcysqd (qdxmc,qdxsm,pp,ggxh,qdxdw,qdxsl,dj,zj,xmmc,gcxmbh,mainid,formmodeid,qdxfl)" +
+                        " VALUES (?,?,?,?,?,?,?,?,?,?,"+mainid+",58,0)" ,yslist.get(i));
+            }
         }
     }
 }
