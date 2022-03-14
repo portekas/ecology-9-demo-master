@@ -27,7 +27,7 @@
     String newDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
     rs.executeSql("SELECT DISTINCT ux.id,ux.xmbh,ux.xmmc, (SELECT COUNT(id) from uf_xmjlgzrz uxj where uxj.xmbh = ux.xmbh and rzrq = '"+newDate+"' and djr = '"+user.getUID() +"') AS isfill " +
             "FROM uf_xmb ux LEFT JOIN uf_xmzcy uz ON ux.xmbh = uz.xmbh " +
-            "WHERE gczt in ('0','1') and (ux.sgxmjl = "+user.getUID() +" or uz.xm = "+user.getUID() +")");
+            "WHERE gczt in ('0','1','2') and (ux.sgxmjl = "+user.getUID() +" or uz.xm = "+user.getUID() +")");
     while(rs.next()){
         resMap = new HashMap<>();
         resMap.put("id",rs.getString("id"));
