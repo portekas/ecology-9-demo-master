@@ -24,7 +24,8 @@
      * getXMZTCQX ：项目模块，按当前用户的角色获取左侧按钮
      * getXMZJLS ： 项目模块，获取资金的收入、支出金额
      * 新增 刘港 2022-01-14 新增会议交办事项跟进记录提交方法
-     * 修改 刘港 2022-02-16  修改 getXMZTCQX 添加查询当前用户在当前项目中的岗位，添加查询当前用户角色、当前用户岗位对应按钮
+     * 修改 刘港 2022-02-16 修改 getXMZTCQX 添加查询当前用户在当前项目中的岗位，添加查询当前用户角色、当前用户岗位对应按钮
+     * 新增 刘港 2022-03-14 新增获取直通车质安抽查、质安处罚、采购、人工费、结算单（人工费）统计数据
      */
     response.setHeader("cache-control", "no-cache");
     response.setHeader("pragma", "no-cache");
@@ -399,6 +400,60 @@
 
         rs.executeSql("INSERT INTO uf_hyjbsxgjjl (djr,szbm,szgs,gjjl,sxzt,sxid,gjsj,gjlx,formmodeid) " +
                 "VALUES(" + sb.toString() + ",278)");
+        out.print(json);
+
+    }else if("getZTCZA".equals(operation)) {
+        //获取直通车质安抽查、质安处罚、采购、人工费、结算单（人工费）统计数据
+        //抽查
+        rs.executeQuery("SELECT COUNT(id) AS zs, SUM(CASE jcjg WHEN 1 THEN 1 ELSE 0 END) AS xzg, SUM(CASE fhjg WHEN 0 THEN 1 ELSE 0 END) AS wc," +
+                "  SUM(CASE fhjg WHEN 1 THEN 1 WHEN 2 THEN 1 ELSE 0 END) AS wwc FROM formtable_main_129 where xmbh1 = ?",new Object[]{bid});
+        if (rs.next()){
+            json.put("cczs",rs.getString("zs"));
+            json.put("ccxzg",rs.getString("xzg"));
+            json.put("ccwc",rs.getString("wc"));
+            json.put("ccwwc",rs.getString("wwc"));
+        }
+        //处罚
+        rs.executeQuery("SELECT SUM(a.rs) AS rs,SUM(a.je) AS je,SUM(a.rs2) AS rs2,SUM(a.je2) AS je2 FROM (" +
+                "  SELECT  (SELECT COUNT(fmd1.xm) FROM formtable_main_76_dt1 fmd1 WHERE fmd1.mainid = fm.id ) AS rs," +
+                "  ISNULL((SELECT SUM(fmd1.cfje) FROM formtable_main_76_dt1 fmd1 WHERE fmd1.mainid = fm.id ),0) AS je," +
+                "  (SELECT COUNT(fmd2.sgd) FROM formtable_main_76_dt2 fmd2 WHERE fmd2.mainid = fm.id ) AS rs2," +
+                "  ISNULL((SELECT SUM(fmd2.cfje) FROM formtable_main_76_dt2 fmd2 WHERE fmd2.mainid = fm.id ),0) AS je2" +
+                "  FROM formtable_main_76 fm WHERE fm.clwc = 0 AND fm.xmbh = '"+bid+"' )a");
+        if(rs.next()){
+            int rs1 = StringUtils.isNoneBlank(rs.getString("rs"))?rs.getInt("rs"):0;
+            int rs2 = StringUtils.isNoneBlank(rs.getString("rs2"))?rs.getInt("rs2"):0;
+            Double je1 = StringUtils.isNoneBlank(rs.getString("je"))?rs.getDouble("je"):0;
+            Double je2 = StringUtils.isNoneBlank(rs.getString("je2"))?rs.getDouble("je2"):0;
+            json.put("cfrc",rs1+rs2);
+            json.put("cfje",je1+je2);
+        }
+
+        //采购
+        rs.executeQuery("SELECT COUNT(id) AS fs,SUM(htjey) AS je FROM V_ht_cght WHERE (htlx != '1' OR htlx IS NULL) AND xmbh = '"+bid+"' ");
+        json.put("cghts",0);
+        json.put("cgzje",0);
+        if(rs.next()){
+            json.put("cghts",rs.getInt("fs"));
+            json.put("cgzje",rs.getDouble("je"));
+        }
+
+        //人工费
+        rs.executeQuery("SELECT COUNT(id) AS zs,SUM(htjey) AS je FROM V_ht_cght WHERE htlx = 1 AND xmbh = '"+bid+"'");
+        json.put("rgfght",0);
+        json.put("rgfje",0);
+        if(rs.next()){
+            json.put("rgfght",rs.getInt("zs"));
+            json.put("rgfje",rs.getDouble("je"));
+        }
+
+        //结算单（人工费）
+        rs.executeQuery("SELECT COUNT(id) AS zs FROM formtable_main_515 WHERE xmbh = '"+bid+"'");
+        json.put("zsdsl",0);
+        if(rs.next()){
+            json.put("zsdsl",rs.getInt("zs"));
+        }
+
         out.print(json);
     }
 
