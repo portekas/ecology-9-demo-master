@@ -25,7 +25,8 @@
      * getXMZJLS ： 项目模块，获取资金的收入、支出金额
      * 新增 刘港 2022-01-14 新增会议交办事项跟进记录提交方法
      * 修改 刘港 2022-02-16 修改 getXMZTCQX 添加查询当前用户在当前项目中的岗位，添加查询当前用户角色、当前用户岗位对应按钮
-     * 新增 刘港 2022-03-14 新增获取直通车质安抽查、质安处罚、采购、人工费、结算单（人工费）统计数据
+     * 新增 刘港 2022-03-14 新增 getZTCZA 获取直通车质安抽查、质安处罚、采购、人工费、结算单（人工费）统计数据
+     * 修改 刘港 2022-03-16 修改 getZTCZA 添加劳务费用结算评审流程统计，工程-结算单(人工费)流程统计
      */
     response.setHeader("cache-control", "no-cache");
     response.setHeader("pragma", "no-cache");
@@ -435,7 +436,7 @@
         json.put("cgzje",0);
         if(rs.next()){
             json.put("cghts",rs.getInt("fs"));
-            json.put("cgzje",rs.getDouble("je"));
+            json.put("cgzje",StringUtils.isNoneBlank(rs.getString("je"))?rs.getDouble("je"):0);
         }
 
         //人工费
@@ -444,7 +445,7 @@
         json.put("rgfje",0);
         if(rs.next()){
             json.put("rgfght",rs.getInt("zs"));
-            json.put("rgfje",rs.getDouble("je"));
+            json.put("rgfje",StringUtils.isNoneBlank(rs.getString("je"))?rs.getDouble("je"):0);
         }
 
         //结算单（人工费）
@@ -454,6 +455,19 @@
             json.put("zsdsl",rs.getInt("zs"));
         }
 
+        //劳务费用结算评审流程数量统计
+        rs.executeQuery("SELECT COUNT(*) AS sl,SUM(sdjey) AS je FROM formtable_main_80  WHERE xmbh = '"+bid+"'");
+        if(rs.next()){
+            json.put("lwfylcsl",rs.getString("sl"));
+            json.put("lwfysdje",StringUtils.isNoneBlank(rs.getString("je"))?rs.getDouble("je"):0);
+        }
+
+        //工程-结算单(人工费)数量统计
+        rs.executeQuery("SELECT COUNT(*) AS sl,SUM(sdje) AS je FROM formtable_main_515 WHERE xmbh = '"+bid+"'");
+        if(rs.next()){
+            json.put("gcjslcsl",rs.getInt("sl"));
+            json.put("gcjssdje",StringUtils.isNoneBlank(rs.getString("je"))?rs.getDouble("je"):0);
+        }
         out.print(json);
     }
 
