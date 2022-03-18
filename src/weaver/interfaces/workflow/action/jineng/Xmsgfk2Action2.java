@@ -76,13 +76,14 @@ public class Xmsgfk2Action2 implements Action
             }
             catch(Exception e)
             {
-                if(!kmmc0.equals("15") && !sfqyyskz0.equals("1")){
-                    requestInfo.getRequestManager().setMessagecontent("剩余可付款金额不能为空，流程无法提交");
-                    return "0";
-                }else {
-                    System.out.println("因为科目名称为15，履约保证金"+kmmc0);
-                    System.out.println("该项目不需要启用预算控制"+sfqyyskz0);
-            }
+//                if(!kmmc0.equals("15") && !sfqyyskz0.equals("1")){
+//                    requestInfo.getRequestManager().setMessagecontent("剩余可付款金额不能为空，流程无法提交");
+                    //直接提交不做控制
+                    return "1";
+//                }else {
+//                    System.out.println("因为科目名称为15，履约保证金"+kmmc0);
+//                    System.out.println("该项目不需要启用预算控制"+sfqyyskz0);
+//                }
 
             }
             if(mxid.isEmpty() && !kmmc0.equals("15") && !sfqyyskz0.equals("1"))
