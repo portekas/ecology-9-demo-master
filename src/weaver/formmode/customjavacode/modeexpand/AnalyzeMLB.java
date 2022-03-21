@@ -28,8 +28,8 @@ import java.util.zip.ZipInputStream;
  * 修改 刘港 2022-3-9 添加从excel中获取预算清单数据并插入预算清单台账中
  * 修改 刘港 2022-3-10 添加计算毛利三的毛利金额和毛利率
  */
-public class AnalyzeMLB5 extends AbstractModeExpandJavaCodeNew {
-    private Log log = LogFactory.getLog(AnalyzeMLB5.class.getName());
+public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
+    private Log log = LogFactory.getLog(AnalyzeMLB.class.getName());
 
     public Map<String, String> doModeExpand(Map<String, Object> param) {
         Map<String, String> result = new HashMap<String, String>();
@@ -295,8 +295,6 @@ public class AnalyzeMLB5 extends AbstractModeExpandJavaCodeNew {
         //更新项目表中的毛利值
         rs.executeUpdate("update uf_xmb set ml1 = ? , ml2 = ? , ml3 = ? where id = ?",
                 new Object[]{mllist.get(0).get("je18"),mllist.get(1).get("je37"),mllist.get(2).get("je13"),xmid});
-        log.error("update uf_xmb set ml1 = "+mllist.get(0).get("je14")+" , ml2 = "+mllist.get(1).get("je37")+" , ml3 = "+mllist.get(2).get("je13")
-                +" where id = "+xmid);
     }
 
     /**
@@ -335,15 +333,20 @@ public class AnalyzeMLB5 extends AbstractModeExpandJavaCodeNew {
         int totoalRows = sheetAt.getLastRowNum();
         //遍历明细
         for(int i = 1; i < totoalRows; i++){
-            arr = new Object[10];
+            arr = new Object[11];
             XSSFRow row = sheetAt.getRow(i);
             for(int j = 0; j< 8; j++){
+                log.error("总行数："+totoalRows+"---"+i+"--"+j+"--");
                 XSSFCell km = row.getCell(j);
+                if(km == null){
+                    continue;
+                }
                 km.setCellType(CellType.STRING);//设置字符串类型
                 arr[j] = km.getStringCellValue();
             }
             arr[8] = xmid;
             arr[9] = xmbh;
+            arr[10] = arr[5];//剩余数量取清单项数量
             mllist.add(arr);
         }
         return mllist;
@@ -359,8 +362,8 @@ public class AnalyzeMLB5 extends AbstractModeExpandJavaCodeNew {
         if(yslist != null && yslist.size() > 0){
             rs.execute("delete uf_gcysqd where mainid = "+mainid);
             for(int i=0; i< yslist.size(); i++){
-                rs.executeUpdate("INSERT INTO uf_gcysqd (qdxmc,qdxsm,pp,ggxh,qdxdw,qdxsl,dj,zj,xmmc,gcxmbh,mainid,formmodeid,qdxfl)" +
-                        " VALUES (?,?,?,?,?,?,?,?,?,?,"+mainid+",58,0)" ,yslist.get(i));
+                rs.executeUpdate("INSERT INTO uf_gcysqd (qdxmc,qdxsm,pp,ggxh,qdxdw,qdxsl,dj,zj,xmmc,gcxmbh,sysl,mainid,formmodeid,qdxfl,yysl,djsl)" +
+                        " VALUES (?,?,?,?,?,?,?,?,?,?,?,"+mainid+",58,0,0,0)" ,yslist.get(i));
             }
         }
     }
