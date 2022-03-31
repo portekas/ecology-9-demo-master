@@ -27,6 +27,7 @@
      * 修改 刘港 2022-02-16 修改 getXMZTCQX 添加查询当前用户在当前项目中的岗位，添加查询当前用户角色、当前用户岗位对应按钮
      * 新增 刘港 2022-03-14 新增 getZTCZA 获取直通车质安抽查、质安处罚、采购、人工费、结算单（人工费）统计数据
      * 修改 刘港 2022-03-16 修改 getZTCZA 添加劳务费用结算评审流程统计，工程-结算单(人工费)流程统计
+     * 新增 刘港 2022-3-31 新增 getYSCLQDFH 添加预算清单材料复核功能，调用存储过程XDOA_gcysqdsysljd
      */
     response.setHeader("cache-control", "no-cache");
     response.setHeader("pragma", "no-cache");
@@ -468,6 +469,11 @@
             json.put("gcjslcsl",rs.getInt("sl"));
             json.put("gcjssdje",StringUtils.isNoneBlank(rs.getString("je"))?rs.getDouble("je"):0);
         }
+        out.print(json);
+
+    }else if("getYSCLQDFH".equals(operation)) {
+        //预算清单复核
+        rs.executeQuery("EXEC XDOA_gcysqdsysljd");
         out.print(json);
     }
 
