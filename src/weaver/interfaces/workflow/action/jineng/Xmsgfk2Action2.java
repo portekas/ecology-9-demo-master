@@ -57,6 +57,13 @@ public class Xmsgfk2Action2 implements Action
             System.out.println((new StringBuilder()).append("kmmc0:").append(kmmc0).toString());
             String sfqyyskz0 = Util.null2String((String)detailTable.get("sfqyyskz"));
             System.out.println((new StringBuilder()).append("sfqyyskz0:").append(sfqyyskz0).toString());
+
+            //是否启用预算控制 选否 直接提交
+            if("1".equals(sykfkje0)){
+                //直接提交不做控制
+                return "1";
+            }
+
 //            if(sykfkje0.isEmpty() && !kmmc0.equals("15") && !sfqyyskz0.equals("1"))
             if(sykfkje0.isEmpty() && Arrays.asList(xkzclkm).contains(kmmc0)){
                 requestInfo.getRequestManager().setMessagecontent("剩余可付款金额不能为空，流程无法提交");
