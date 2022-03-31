@@ -35,34 +35,43 @@ public class RDPLoginApi {
         JSONObject json = new JSONObject();
         RecordSet xmbRec = new RecordSet();
         String bbid = Util.null2String(req.getParameter("bbid"));
-        String xmbsql = "SELECT COUNT(uz.id) as userNum FROM uf_zhdybbqx uz LEFT JOIN uf_xxhmk uxk ON uxk.id = uz.bb" +
-                " WHERE uxk.bblj = '"+bbid+"' and (cast(uz.ry as varchar(99)) = '"+user.getUID()+"' or uz.ry like '%,"+user.getUID()+",%' or uz.ry like '"+user.getUID()+",%' or uz.ry like '%,"+user.getUID()+"' or (sfgk = '1' AND ry IS NULL))";
-        xmbRec.execute(xmbsql);
-        if(xmbRec.next()){
-            json.put("userNum",xmbRec.getString("userNum"));
-            json.put("userID",user.getUID());
-            json.put("userDept",user.getUserDepartment());
-        }
-        //查询相关部门
-        String xgbm = "select field8 AS xgbm from cus_fielddata WHERE id = '"+user.getUID()+"' AND scopeid = '-1'";
-        xmbRec.execute(xgbm);
-        String xgbmid = "";
-        if(xmbRec.next()){
-            xgbmid = xmbRec.getString("xgbm");
-        }
-        json.put("userxgbm",xgbmid);
 
-        //查询子部门
-        String zbm = "SELECT id FROM HrmDepartment hd WHERE hd.supdepid = '"+user.getUserDepartment()+"' AND (hd.canceled != 1 OR hd.canceled IS NULL)";
-        xmbRec.execute(zbm);
-        StringBuilder zbmid = new StringBuilder();
-        while (xmbRec.next()){
-            if(zbmid.length() != 0 ){
-                zbmid.append(",");
+        String xxhmkbb = "SELECT id FROM uf_xxhmk WHERE bblj = '"+bbid+"'";
+        xmbRec.execute(xxhmkbb);
+        if(xmbRec.next()){
+            String xmbsql = "SELECT COUNT(uz.id) as userNum FROM uf_zhdybbqx uz LEFT JOIN uf_xxhmk uxk ON uxk.id = uz.bb" +
+                    " WHERE (uz.bb = '"+xmbRec.getString("id")+"' OR ',' + CONVERT(VARCHAR(MAX), uz.zbb) + ',' LIKE '%,"+xmbRec.getString("id")+",%' ESCAPE '/') " +
+                    " and (cast(uz.ry as varchar(99)) = '"+user.getUID()+"' or uz.ry like '%,"+user.getUID()+",%' or uz.ry like '"+user.getUID()+",%' or uz.ry like '%,"+user.getUID()+"' or (sfgk = '1' AND ry IS NULL))";
+            xmbRec.execute(xmbsql);
+            if(xmbRec.next()){
+                json.put("userNum",xmbRec.getString("userNum"));
+                json.put("userID",user.getUID());
+                json.put("userDept",user.getUserDepartment());
             }
-            zbmid.append(xmbRec.getString("id"));
+            //查询相关部门
+            String xgbm = "select field8 AS xgbm from cus_fielddata WHERE id = '"+user.getUID()+"' AND scopeid = '-1'";
+            xmbRec.execute(xgbm);
+            String xgbmid = "";
+            if(xmbRec.next()){
+                xgbmid = xmbRec.getString("xgbm");
+            }
+            json.put("userxgbm",xgbmid);
+
+            //查询子部门
+            String zbm = "SELECT id FROM HrmDepartment hd WHERE hd.supdepid = '"+user.getUserDepartment()+"' AND (hd.canceled != 1 OR hd.canceled IS NULL)";
+            xmbRec.execute(zbm);
+            StringBuilder zbmid = new StringBuilder();
+            while (xmbRec.next()){
+                if(zbmid.length() != 0 ){
+                    zbmid.append(",");
+                }
+                zbmid.append(xmbRec.getString("id"));
+            }
+            json.put("userzbm",zbmid.toString());
+
+        }else {
+            json.put("userNum",0);
         }
-        json.put("userzbm",zbmid.toString());
         return json;
     }
 
