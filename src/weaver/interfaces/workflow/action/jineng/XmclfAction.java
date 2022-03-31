@@ -14,6 +14,7 @@ import java.util.Map;
 /**
  * 2021-12-13 刘港
  * 添加判断，只验证材料费、人工费、业务费 的报销金额是否大于剩余可付款金额
+ * 修改 2022-03-31 刘港  添加判断是否控制预算状态，为1否时直接提交
  */
 public class XmclfAction implements Action {
     @Override
@@ -30,6 +31,14 @@ public class XmclfAction implements Action {
         Double bxje0 = Double.parseDouble(bxje);
         String kmkyys0 = Util.null2String(mainTable.get("kmkyys"));
         String clkm = Util.null2String(mainTable.get("fykm"));//需要控制的科目 材料费、人工费、业务费
+
+        String sfqyyskz = Util.null2String(mainTable.get("sfqyyskz"));
+        //是否控制预算 0 是 1 否
+        if("1".equals(sfqyyskz)){
+            //不用控制预算直接提交
+            return SUCCESS;
+        }
+
         if (Arrays.asList(xkzclkm).contains(clkm) && kmkyys0.isEmpty()) {
             requestInfo.getRequestManager().setMessagecontent("该项目未申请相关科目预算，流程无法提交");
             return FAILURE_AND_CONTINUE;

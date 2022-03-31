@@ -19,6 +19,7 @@ import java.util.Map;
 /**
  * 创建 泛微二开人员
  * 修改 2021-12-13 刘港  添加判断，只验证材料费、人工费、业务费 的报销金额是否大于剩余可付款金额
+ * 修改 2022-03-31 刘港  添加判断是否控制预算状态，为1否时直接提交
  *
  */
 
@@ -31,6 +32,14 @@ public class XmfyAction implements Action {
         RequestTableInfoToMap requestTableInfoToMap = new RequestTableInfoToMap(requestInfo);
         Map<String, String> mainTable = requestTableInfoToMap.getMainTableMap();
         String xmbhwb = Util.null2String(mainTable.get("xmbhwb"));
+
+        String yskz = Util.null2String(mainTable.get("yskz"));
+        //是否控制预算 0 是 1 否
+        if("1".equals(yskz)){
+            //不用控制预算直接提交
+            return SUCCESS;
+        }
+
         String[] xkzclkm = {"1","2","4"};////需要控制的科目 1材料费、2人工费、4业务费
         ArrayList<HashMap<String, String>> detailTables = requestTableInfoToMap.getDetailTableMaps(0);
         for (HashMap<String, String> detailTable : detailTables) {
