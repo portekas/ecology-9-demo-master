@@ -1,7 +1,8 @@
 package weaver.formmode.customjavacode.modeexpand;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -71,7 +72,7 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
                         return result;
                     }
                     //读取流文件并转换成excel
-                    XSSFWorkbook hssfWorkbook = getMLBFile(mlbfj);
+                    Workbook hssfWorkbook = getMLBFile(mlbfj);
                     //解析流文件
                     List<Map<String, String>> mllist = fileAnalyze(hssfWorkbook);
 
@@ -107,28 +108,31 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
      * @return 文件流
      * @throws Exception
      */
-    public XSSFWorkbook getMLBFile(String docid) throws Exception {
+    public Workbook getMLBFile(String docid) throws Exception {
         InputStream inputStream = null;
         String filePath = "";//文件路径
         String iszip = "0";//是否压缩
         String isaesencrypt = "0";//是否加密
         String aescode = "";//加密密码
+        String imagefilename = "";//文件名
+        String filetype = "";//文件后缀
 
         RecordSet rs = new RecordSet();
-        rs.executeQuery("SELECT filerealpath,iszip,isaesencrypt,aescode FROM imagefile WHERE imagefileid = (SELECT imagefileid from docimagefile WHERE docid = ?)"
+        rs.executeQuery("SELECT imagefilename,filerealpath,iszip,isaesencrypt,aescode FROM imagefile WHERE imagefileid = (SELECT imagefileid from docimagefile WHERE docid = ?)"
                 , new Object[]{docid});
         if (rs.next()) {
             filePath = Util.null2String(rs.getString("filerealpath"));
+            imagefilename = Util.null2String(rs.getString("imagefilename"));
             iszip = Util.null2String(rs.getString("iszip"));
             isaesencrypt = Util.null2String(rs.getString("isaesencrypt"));
             aescode = Util.null2String(rs.getString("aescode"));
 
             //验证附件类型是否是excel
-            if (filePath.indexOf(".") > -1) {
-                int typelen = filePath.lastIndexOf(".");
+            if (imagefilename.indexOf(".") > -1) {
+                int typelen = imagefilename.lastIndexOf(".");
                 if (typelen >= 0) {
-                    String filetype = filePath.substring(typelen + 1, filePath.length());
-                    if ("xls".equalsIgnoreCase(filetype) || "xlsx".equalsIgnoreCase(filetype)) {
+                    filetype = imagefilename.substring(typelen + 1);
+                    if (!"xls".equalsIgnoreCase(filetype) && !"xlsx".equalsIgnoreCase(filetype)) {
                         new Exception("附件类型不支持解析");
                     }
                 }
@@ -151,8 +155,13 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
                 inputStream = AESCoder.decrypt((InputStream) inputStream, aescode);
             }
 
-            XSSFWorkbook hssfWorkbook = new XSSFWorkbook(inputStream);
-            return hssfWorkbook;
+            if ("xls".equalsIgnoreCase(filetype) ) {
+                return new HSSFWorkbook(inputStream);
+            }else if("xlsx".equalsIgnoreCase(filetype)){
+                return new XSSFWorkbook(inputStream);
+            }
+
+            return null;
         }
         return null;
     }
@@ -162,7 +171,7 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
      * @param hssfWorkbook excle
      * @return 文件内容集合
      */
-    public List<Map<String,String>> fileAnalyze(XSSFWorkbook hssfWorkbook) throws Exception {
+    public List<Map<String,String>> fileAnalyze(Workbook hssfWorkbook) throws Exception {
         List<Map<String,String>> mllist = new ArrayList<>();
         Map<String,String> map = new HashMap<>();
         Map<String,String> mlmap;
@@ -174,23 +183,26 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
         map.put("end1","38");
 
         //按照固定模板格式取值
-        XSSFSheet sheetAt = hssfWorkbook.getSheetAt(0);
+        Sheet sheetAt = hssfWorkbook.getSheetAt(0);
         for(int z = 0; z<2; z++){
             mlmap = new HashMap<>();
             mlmap.put("start",map.get("start"+z));
             mlmap.put("end",map.get("end"+z));
             for (int i = Integer.valueOf(map.get("start"+z)); i < Integer.valueOf(map.get("end"+z)); i++) {
-                XSSFRow row = sheetAt.getRow(i);
-                XSSFCell km = row.getCell(0);
-                XSSFCell je = row.getCell(2);
+                Row row = sheetAt.getRow(i);
+                Cell km = row.getCell(0);
+                Cell je = row.getCell(2);
                 //设置字符串类型
-                km.setCellType(CellType.STRING);
-                je.setCellType(CellType.STRING);
-                if(StringUtils.isBlank(km.getStringCellValue())){
-                    continue;
+//                km.setCellType(CellType.STRING);
+//                je.setCellType(CellType.STRING);
+                if (km != null && je != null) {
+                    if(StringUtils.isBlank(km.getStringCellValue())){
+                        continue;
+                    }
+                    mlmap.put("km"+i,km.toString());
+                    log.error("金额的值为："+je.toString());
+                    mlmap.put("je"+i,String.valueOf(je.getNumericCellValue()));
                 }
-                mlmap.put("km"+i,km.getStringCellValue());
-                mlmap.put("je"+i,je.getStringCellValue());
             }
             mllist.add(mlmap);
         }
@@ -208,10 +220,10 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
         mlmap.put("je0",stringToDou(mllist.get(0).get("je5"))/1.13+"");
         //2、施工人工机械辅材费
         mlmap.put("km1",mllist.get(0).get("km7"));
-        mlmap.put("je1",stringToDou(mllist.get(0).get("je7"))/1.13+"");
+        mlmap.put("je1",stringToDou(mllist.get(0).get("je7"))/1.03+"");
         //3、项目外包部分
         mlmap.put("km2",mllist.get(0).get("km8"));
-        mlmap.put("je2",stringToDou(mllist.get(0).get("je8"))/1.13+"");
+        mlmap.put("je2",stringToDou(mllist.get(0).get("je8"))/1.03+"");
         //4、总包配合费(含临设、水电费、修补等）
         mlmap.put("km3",mllist.get(0).get("km9"));
         mlmap.put("je3",mllist.get(0).get("je9"));
@@ -245,7 +257,7 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
         mlmap.put("je11",mllist.get(1).get("je35"));
 
         //收入金额 合同额/发票税率
-        Double sr = stringToDou(mllist.get(0).get("je3"))/(stringToDou(fpsl)/100);
+        Double sr = stringToDou(mllist.get(0).get("je3"))/(stringToDou(fpsl)/100+1);
         //成本
         Double cb = stringToDou(mlmap.get("je0"))+stringToDou(mlmap.get("je1"))+stringToDou(mlmap.get("je2"))
                 +stringToDou(mlmap.get("je3"))+stringToDou(mlmap.get("je4"))+stringToDou(mlmap.get("je6"))+stringToDou(mlmap.get("je7"))
@@ -318,12 +330,12 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
      * @return 预算清单集合
      * @throws Exception
      */
-    public List<Object[]> fileAnalyzeYSQD(XSSFWorkbook hssfWorkbook,String xmid,String xmbh) throws Exception {
+    public List<Object[]> fileAnalyzeYSQD(Workbook hssfWorkbook,String xmid,String xmbh) throws Exception {
         List<Object[]> mllist = new ArrayList<>();
         Object[] arr;
 
         //解析预算清单
-        XSSFSheet sheetAt = hssfWorkbook.getSheetAt(1);
+        Sheet sheetAt = hssfWorkbook.getSheetAt(1);
         String sheetname = sheetAt.getSheetName();
         //第二页签不是预算明细则不用解析
         if(sheetname.indexOf("预算") == -1){
@@ -334,15 +346,14 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
         //遍历明细
         for(int i = 1; i < totoalRows; i++){
             arr = new Object[11];
-            XSSFRow row = sheetAt.getRow(i);
+            Row row = sheetAt.getRow(i);
             for(int j = 0; j< 8; j++){
-                log.error("总行数："+totoalRows+"---"+i+"--"+j+"--");
-                XSSFCell km = row.getCell(j);
+                Cell km = row.getCell(j);
                 if(km == null){
                     continue;
                 }
-                km.setCellType(CellType.STRING);//设置字符串类型
-                arr[j] = km.getStringCellValue();
+//                km.setCellType(CellType.STRING);//设置字符串类型
+                arr[j] = km.toString();
             }
             arr[8] = xmid;
             arr[9] = xmbh;
