@@ -15,6 +15,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 @Path("/rdploginApi")
 public class RDPLoginApi {
@@ -25,6 +27,8 @@ public class RDPLoginApi {
      * 创建 2021-12-16 刘港
      * 修改 2021-12-21 刘港 返回参数中添加当前登录人ID、部门ID、相关部门ID、子部门ID
      * 修改 2021-12-31 刘港 验证报表是否需要填写安全码 、 获取cookie信息验证是否填写过
+     * 修改 2022-04-02 刘港 添加记录访问日志
+     * 修改 2022-04-11 刘港 系统管理员可直接访问报表不用验证权限、不用记录日志
      * @return
      */
     @GET
@@ -35,19 +39,39 @@ public class RDPLoginApi {
         JSONObject json = new JSONObject();
         RecordSet xmbRec = new RecordSet();
         String bbid = Util.null2String(req.getParameter("bbid"));
+        String xxhmkbbid = "";
+        boolean isAdmin = false;
+        String sfcgfw = "1";//日志记录访问成功状态默认否
+
+        if(StringUtils.isBlank(bbid)){
+            return null;
+        }
 
         String xxhmkbb = "SELECT id FROM uf_xxhmk WHERE bblj = '"+bbid+"'";
         xmbRec.execute(xxhmkbb);
         if(xmbRec.next()){
-            String xmbsql = "SELECT COUNT(uz.id) as userNum FROM uf_zhdybbqx uz LEFT JOIN uf_xxhmk uxk ON uxk.id = uz.bb" +
-                    " WHERE (uz.bb = '"+xmbRec.getString("id")+"' OR ',' + CONVERT(VARCHAR(MAX), uz.zbb) + ',' LIKE '%,"+xmbRec.getString("id")+",%' ESCAPE '/') " +
-                    " and (cast(uz.ry as varchar(99)) = '"+user.getUID()+"' or uz.ry like '%,"+user.getUID()+",%' or uz.ry like '"+user.getUID()+",%' or uz.ry like '%,"+user.getUID()+"' or (sfgk = '1' AND ry IS NULL))";
-            xmbRec.execute(xmbsql);
-            if(xmbRec.next()){
-                json.put("userNum",xmbRec.getString("userNum"));
-                json.put("userID",user.getUID());
-                json.put("userDept",user.getUserDepartment());
+            xxhmkbbid = xmbRec.getString("id");
+
+            xmbRec.execute("SELECT 1 FROM hrmrolemembers WHERE roleid = 2 AND resourceid = "+user.getUID());
+            if(!xmbRec.next()){//非系统管理员判断权限
+                String xmbsql = "SELECT COUNT(uz.id) as userNum FROM uf_zhdybbqx uz LEFT JOIN uf_xxhmk uxk ON uxk.id = uz.bb" +
+                        " WHERE (uz.bb = '"+xmbRec.getString("id")+"' OR ',' + CONVERT(VARCHAR(MAX), uz.zbb) + ',' LIKE '%,"+xxhmkbbid+",%' ESCAPE '/') " +
+                        " and (cast(uz.ry as varchar(99)) = '"+user.getUID()+"' or uz.ry like '%,"+user.getUID()+",%' or uz.ry like '"+user.getUID()+",%' or uz.ry like '%,"+user.getUID()+"' or (sfgk = '1' AND ry IS NULL))";
+                xmbRec.execute(xmbsql);
+                if(xmbRec.next()){
+                    json.put("userNum",xmbRec.getString("userNum"));
+                    if(!"0".equals(xmbRec.getString("userNum"))){
+                        sfcgfw = "0";//有访问权限，日志记录成功访问
+                    }
+                }
+            }else {//系统管理员直接访问
+                isAdmin = true;
+                json.put("userNum","1");
             }
+
+            json.put("userID",user.getUID());
+            json.put("userDept",user.getUserDepartment());
+
             //查询相关部门
             String xgbm = "select field8 AS xgbm from cus_fielddata WHERE id = '"+user.getUID()+"' AND scopeid = '-1'";
             xmbRec.execute(xgbm);
@@ -72,6 +96,21 @@ public class RDPLoginApi {
         }else {
             json.put("userNum",0);
         }
+
+        if(!isAdmin){//非管理员记录访问日志
+            xmbRec.executeQuery("INSERT INTO uf_bbfwrz (formmodeid,fwr,fwrbm,fwrgs,fwrq,fwsj,sfcgfw,fwbb,xxhmkbb) VALUES (292,?,?,?,?,?,?,?,?)",
+                    new Object[]{
+                            user.getUID(),
+                            user.getUserDepartment(),
+                            user.getUserSubCompany1(),
+                            new SimpleDateFormat("yyyy-MM-dd").format(new Date()),
+                            new SimpleDateFormat("HH:mm").format(new Date()),
+                            sfcgfw,
+                            bbid,
+                            xxhmkbbid
+            });
+        }
+
         return json;
     }
 
