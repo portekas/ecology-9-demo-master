@@ -23,8 +23,6 @@ import java.util.Date;
 
 @Path("/rdploginApi")
 public class RDPLoginApi {
-    private Log log = LogFactory.getLog(AnalyzeMLB.class.getName());
-
     /**
      * 查询报表权限API，提供给RDP报表使用判断是否有权限打开报表，有权限返回 1 无权限返回 0
      * 查询报表权限配置列表
@@ -51,13 +49,11 @@ public class RDPLoginApi {
         xmbRec.execute(xxhmkbb);
         if(xmbRec.next()){
             xxhmkbbid = xmbRec.getString("id");
-            log.error("----"+bbid+"-----------------------------------111-------------");
             xmbRec.execute("SELECT 1 FROM hrmrolemembers WHERE roleid = 2 AND resourceid = "+user.getUID());
             if(!xmbRec.next()){//非系统管理员判断权限
                 String xmbsql = "SELECT COUNT(uz.id) as userNum FROM uf_zhdybbqx uz LEFT JOIN uf_xxhmk uxk ON uxk.id = uz.bb" +
                         " WHERE (uz.bb = '"+xxhmkbbid+"' OR ',' + CONVERT(VARCHAR(MAX), uz.zbb) + ',' LIKE '%,"+xxhmkbbid+",%' ESCAPE '/') " +
                         " and (cast(uz.ry as varchar(99)) = '"+user.getUID()+"' or uz.ry like '%,"+user.getUID()+",%' or uz.ry like '"+user.getUID()+",%' or uz.ry like '%,"+user.getUID()+"' or (sfgk = '1' AND ry IS NULL))";
-                log.error("----"+xmbsql+"-----------------------------------111-------------");
                 xmbRec.execute(xmbsql);
                 if(xmbRec.next()){
                     json.put("userNum",xmbRec.getString("userNum"));
@@ -98,7 +94,7 @@ public class RDPLoginApi {
             json.put("userNum",0);
         }
 
-        if(!isAdmin && StringUtils.isNotBlank(bbid)){//非管理员记录访问日志
+        if(!isAdmin && StringUtils.isNotBlank(xxhmkbbid)){//非管理员记录访问日志
             xmbRec.executeQuery("INSERT INTO uf_bbfwrz (formmodeid,fwr,fwrbm,fwrgs,fwrq,fwsj,sfcgfw,fwbb,xxhmkbb) VALUES (292,?,?,?,?,?,?,?,?)",
                     new Object[]{
                             user.getUID(),
