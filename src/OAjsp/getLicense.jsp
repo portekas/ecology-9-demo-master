@@ -6,6 +6,11 @@
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="org.apache.commons.lang3.StringUtils" %>
 <%@ page import="java.math.BigDecimal" %>
+<%@ page import="weaver.interfaces.datasource.DataSource" %>
+<%@ page import="java.sql.PreparedStatement" %>
+<%@ page import="java.sql.SQLException" %>
+<%@ page import="java.sql.ResultSet" %>
+<%@ page import="java.sql.Connection" %>
 <%@ page trimDirectiveWhitespaces="true" %>
 <jsp:useBean id="rci" class="weaver.hrm.resource.ResourceComInfo" scope="page"/>
 
@@ -28,6 +33,7 @@
      * 新增 刘港 2022-03-14 新增 getZTCZA 获取直通车质安抽查、质安处罚、采购、人工费、结算单（人工费）统计数据
      * 修改 刘港 2022-03-16 修改 getZTCZA 添加劳务费用结算评审流程统计，工程-结算单(人工费)流程统计
      * 新增 刘港 2022-3-31 新增 getYSCLQDFH 添加预算清单材料复核功能，调用存储过程XDOA_gcysqdsysljd
+     * 新增 刘港 2022-04-08 新增 getSyncYYLedger CRM供应商页面按钮调用 同步用友供应商帐套，调用存储过程sp_insertbase
      */
     response.setHeader("cache-control", "no-cache");
     response.setHeader("pragma", "no-cache");
@@ -474,6 +480,33 @@
     }else if("getYSCLQDFH".equals(operation)) {
         //预算清单复核
         rs.executeQuery("EXEC XDOA_gcysqdsysljd");
+        out.print(json);
+
+    }else if("getSyncYYLedger".equals(operation)){
+        //同步用友供应商帐套
+        rs.executeQuery("SELECT gysmc,gysbh,glgs FROM uf_crmgys where id = " + bid );
+        if(rs.next()){
+            String gysbh = rs.getString("gysbh");
+            String gysmc = rs.getString("gysmc");
+            String glgs = rs.getString("glgs");
+            rs.executeQuery("SELECT 1 FROM uf_OAU8DY WHERE oadm = '"+gysbh+"'");
+            if(!rs.next()){
+                DataSource ds = (DataSource) StaticObj.getServiceByFullname(("datasource.U8_GC"), DataSource.class);
+                Connection conn = ds.getConnection();
+                PreparedStatement psm = conn.prepareStatement("EXEC sp_insertbase ?,?,?,?");
+                psm.setString(1,gysbh);
+                psm.setString(2,gysmc);
+                psm.setString(3,glgs);
+                psm.setString(4,"供应商");
+                psm.execute();
+                try {
+                    psm.close();
+                    conn.close();
+                } catch (SQLException s) {
+                    s.printStackTrace();
+                }
+            }
+        }
         out.print(json);
     }
 
