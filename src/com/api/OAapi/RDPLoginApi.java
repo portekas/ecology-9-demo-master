@@ -62,36 +62,36 @@ public class RDPLoginApi {
                 isAdmin = true;
                 json.put("userNum","1");
             }
-
-            json.put("userID",user.getUID());
-            json.put("userDept",user.getUserDepartment());
-
-            //查询相关部门
-            String xgbm = "select field8 AS xgbm from cus_fielddata WHERE id = '"+user.getUID()+"' AND scopeid = '-1'";
-            xmbRec.execute(xgbm);
-            String xgbmid = "";
-            if(xmbRec.next()){
-                xgbmid = xmbRec.getString("xgbm");
-            }
-            json.put("userxgbm",xgbmid);
-
-            //查询子部门
-            String zbm = "SELECT id FROM HrmDepartment hd WHERE hd.supdepid = '"+user.getUserDepartment()+"' AND (hd.canceled != 1 OR hd.canceled IS NULL)";
-            xmbRec.execute(zbm);
-            StringBuilder zbmid = new StringBuilder();
-            while (xmbRec.next()){
-                if(zbmid.length() != 0 ){
-                    zbmid.append(",");
-                }
-                zbmid.append(xmbRec.getString("id"));
-            }
-            json.put("userzbm",zbmid.toString());
-
         }else {
             json.put("userNum",0);
         }
 
-        if(!isAdmin && StringUtils.isNotBlank(xxhmkbbid)){//非管理员记录访问日志
+        json.put("userID",user.getUID());
+        json.put("userDept",user.getUserDepartment());
+
+        //查询相关部门
+        String xgbm = "select field8 AS xgbm from cus_fielddata WHERE id = '"+user.getUID()+"' AND scopeid = '-1'";
+        xmbRec.execute(xgbm);
+        String xgbmid = "";
+        if(xmbRec.next()){
+            xgbmid = xmbRec.getString("xgbm");
+        }
+        json.put("userxgbm",xgbmid);
+
+        //查询子部门
+        String zbm = "SELECT id FROM HrmDepartment hd WHERE hd.supdepid = '"+user.getUserDepartment()+"' AND (hd.canceled != 1 OR hd.canceled IS NULL)";
+        xmbRec.execute(zbm);
+        StringBuilder zbmid = new StringBuilder();
+        while (xmbRec.next()){
+            if(zbmid.length() != 0 ){
+                zbmid.append(",");
+            }
+            zbmid.append(xmbRec.getString("id"));
+        }
+        json.put("userzbm",zbmid.toString());
+
+        //非管理员记录访问日志
+        if(!isAdmin && StringUtils.isNotBlank(xxhmkbbid)){
             xmbRec.executeQuery("INSERT INTO uf_bbfwrz (formmodeid,fwr,fwrbm,fwrgs,fwrq,fwsj,sfcgfw,fwbb,xxhmkbb) VALUES (292,?,?,?,?,?,?,?,?)",
                     new Object[]{
                             user.getUID(),
