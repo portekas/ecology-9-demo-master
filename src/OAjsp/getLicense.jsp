@@ -438,7 +438,7 @@
         }
 
         //采购
-        rs.executeQuery("SELECT COUNT(id) AS fs,SUM(htjey) AS je FROM V_ht_cght WHERE (htlx != '1' OR htlx IS NULL) AND xmbh = '"+bid+"' ");
+        rs.executeQuery("SELECT COUNT(id) AS fs,SUM(htjey) AS je FROM V_ht_cght WHERE (htlx != '3' OR htlx IS NULL) AND xmbh = '"+bid+"' ");
         json.put("cghts",0);
         json.put("cgzje",0);
         if(rs.next()){
