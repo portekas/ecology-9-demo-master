@@ -447,7 +447,7 @@
         }
 
         //人工费
-        rs.executeQuery("SELECT COUNT(id) AS zs,SUM(htjey) AS je FROM V_ht_cght WHERE htlx = 1 AND xmbh = '"+bid+"'");
+        rs.executeQuery("SELECT COUNT(id) AS zs,SUM(htjey) AS je FROM V_ht_cght WHERE htlx = 3 AND xmbh = '"+bid+"'");
         json.put("rgfght",0);
         json.put("rgfje",0);
         if(rs.next()){
@@ -482,22 +482,22 @@
         rs.executeQuery("EXEC XDOA_gcysqdsysljd");
         out.print(json);
 
-    }else if("getSyncYYLedger".equals(operation)){
+    }else if("getSyncYYLedger".equals(operation)) {
         //同步用友供应商帐套
-        rs.executeQuery("SELECT gysmc,gysbh,glgs FROM uf_crmgys where id = " + bid );
-        if(rs.next()){
+        rs.executeQuery("SELECT gysmc,gysbh,glgs FROM uf_crmgys where id = " + bid);
+        if (rs.next()) {
             String gysbh = rs.getString("gysbh");
             String gysmc = rs.getString("gysmc");
             String glgs = rs.getString("glgs");
-            rs.executeQuery("SELECT 1 FROM uf_OAU8DY WHERE oadm = '"+gysbh+"'");
-            if(!rs.next()){
+            rs.executeQuery("SELECT 1 FROM uf_OAU8DY WHERE oadm = '" + gysbh + "'");
+            if (!rs.next()) {
                 DataSource ds = (DataSource) StaticObj.getServiceByFullname(("datasource.U8_GC"), DataSource.class);
                 Connection conn = ds.getConnection();
                 PreparedStatement psm = conn.prepareStatement("EXEC sp_insertbase ?,?,?,?");
-                psm.setString(1,gysbh);
-                psm.setString(2,gysmc);
-                psm.setString(3,glgs);
-                psm.setString(4,"供应商");
+                psm.setString(1, gysbh);
+                psm.setString(2, gysmc);
+                psm.setString(3, glgs);
+                psm.setString(4, "供应商");
                 psm.execute();
                 try {
                     psm.close();
@@ -507,6 +507,50 @@
                 }
             }
         }
+        out.print(json);
+
+//    }else if("getCheckLogout".equals(operation){
+//
+////        http://220.189.214.90:2019/api/hrm/login/checkLogout?status=1
+
+    }else if("getRKDZT".equals(operation)){
+        //获取入库单账套金额
+        String ztje100 = "0";
+        String ztje110 = "0";
+        String ztje114 = "0";
+        rs.execute("select SUM(iprice) as je from V_u8cgrkdmx100 WHERE crmgys = '"+bid+"'");
+        if(rs.next()){
+            ztje100 = StringUtils.isNoneBlank(rs.getString("je"))?rs.getString("je"):"0";
+        }
+        rs.execute("select SUM(iprice) as je from V_u8cgrkdmx110 WHERE crmgys = '"+bid+"'");
+        if(rs.next()){
+            ztje110 = StringUtils.isNoneBlank(rs.getString("je"))?rs.getString("je"):"0";
+        }
+        rs.execute("select SUM(iprice) as je from V_u8cgrkdmx114 WHERE crmgys = '"+bid+"'");
+        if(rs.next()){
+            ztje114 = StringUtils.isNoneBlank(rs.getString("je"))?rs.getString("je"):"0";
+        }
+        json.put("ztje100",ztje100);
+        json.put("ztje110",ztje110);
+        json.put("ztje114",ztje114);
+        out.print(json);
+
+    }else if("getHTGLCGDD".equals(operation)){
+        //合同管理采购订单
+        RecordSet rs2 = new RecordSet();
+        //合同ID或订单ID为空直接返回
+        if(StringUtils.isBlank(par1) || StringUtils.isBlank(bid)){
+            return;
+        }
+
+        String[] ddids = par1.split(",");
+        for(String ddid : ddids){
+            rs2.executeUpdate("INSERT INTO uf_cghtglcgdd (formmodeid,htmc,ddbh) VALUES (295,?,?)"
+                    ,new Object[]{bid,ddid});
+        }
+
+        rs2.executeUpdate("update uf_htylb set ddbh = ? where id = ?",new Object[]{par1,bid});
+
         out.print(json);
     }
 
