@@ -34,6 +34,8 @@
      * 修改 刘港 2022-03-16 修改 getZTCZA 添加劳务费用结算评审流程统计，工程-结算单(人工费)流程统计
      * 新增 刘港 2022-3-31 新增 getYSCLQDFH 添加预算清单材料复核功能，调用存储过程XDOA_gcysqdsysljd
      * 新增 刘港 2022-04-08 新增 getSyncYYLedger CRM供应商页面按钮调用 同步用友供应商帐套，调用存储过程sp_insertbase
+     * 新增 刘港 2022-04-19 新增 getHTGLCGDD 合同关联采购订单，用于采购合同智能关联订单查询，手动选择关联订单操作
+     * 新增 刘港 2022-04-19 新增 getHTGLCGDDPL 合同关联采购订单，用于采购合同智能关联订单查询，勾选自动关联订单操作
      */
     response.setHeader("cache-control", "no-cache");
     response.setHeader("pragma", "no-cache");
@@ -41,6 +43,7 @@
     String operation = Util.null2String(request.getParameter("operation"));
     String bid = Util.null2String(request.getParameter("bid"));
     String par1 = Util.null2String(request.getParameter("par1"));
+    String par2 = Util.null2String(request.getParameter("par2"));
     JSONObject json = new JSONObject();
     List<Object> objArr = new ArrayList<>();
     User user=HrmUserVarify.getUser(request,response);
@@ -537,7 +540,6 @@
 
     }else if("getHTGLCGDD".equals(operation)){
         //合同管理采购订单
-        RecordSet rs2 = new RecordSet();
         //合同ID或订单ID为空直接返回
         if(StringUtils.isBlank(par1) || StringUtils.isBlank(bid)){
             return;
@@ -545,11 +547,31 @@
 
         String[] ddids = par1.split(",");
         for(String ddid : ddids){
-            rs2.executeUpdate("INSERT INTO uf_cghtglcgdd (formmodeid,htmc,ddbh) VALUES (295,?,?)"
-                    ,new Object[]{bid,ddid});
+            rs.executeUpdate("INSERT INTO uf_cghtglcgdd (htmc,ddbh,szzt) VALUES (?,?,?)"
+                    ,new Object[]{bid,ddid,par2});
         }
 
-        rs2.executeUpdate("update uf_htylb set ddbh = ? where id = ?",new Object[]{par1,bid});
+        rs.executeUpdate("update uf_htylb set ddbh = ? where id = ?",new Object[]{par1,bid});
+        out.print(json);
+
+    }else if("getHTGLCGDDPL".equals(operation)){
+        //合同管理采购订单-批量操作
+        RecordSet rs2 = new RecordSet();
+        //合同ID为空直接返回
+        if(StringUtils.isBlank(bid)){
+            return;
+        }
+        for(String id : bid.split(",")){
+            rs.execute("select ddbh from "+par1+" where id = "+id);
+            if (rs.next()){
+                String ddbh = rs.getString("ddbh");
+                for(String ddid : ddbh.split(",")){
+                    rs2.executeUpdate("INSERT INTO uf_cghtglcgdd (htmc,ddbh,szzt) VALUES (?,?,?)"
+                            ,new Object[]{id,ddid,par2});
+                }
+                rs2.executeUpdate("update uf_htylb set ddbh = ? where id = ?",new Object[]{ddbh,id});
+            }
+        }
 
         out.print(json);
     }
