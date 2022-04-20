@@ -10,7 +10,7 @@ import java.util.Map;
 /**
  * 创建 刘港 2022-04-19 建模保存后将变成全角的SQL关键字替换为正常字母
  */
-public class RemFullAngle21 extends AbstractModeExpandJavaCodeNew {
+public class RemFullAngle extends AbstractModeExpandJavaCodeNew {
     @Override
     public Map<String, String> doModeExpand(Map<String, Object> param) {
         Map<String, String> result = new HashMap<String, String>();
