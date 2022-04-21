@@ -96,7 +96,7 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
             e.printStackTrace(new PrintStream(ba));
             log.error(ba.toString());
 
-            result.put("errmsg", e.getMessage());
+            result.put("errmsg", "    无法识别毛利表附件，请检查是否与模板一致    ");
             result.put("flag", "false");
         }
         return result;
