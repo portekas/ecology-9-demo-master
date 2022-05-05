@@ -13,6 +13,7 @@ import com.baidu.aip.util.Base64Util;
 import weaver.conn.RecordSet;
 import weaver.file.AESCoder;
 import weaver.formmode.customjavacode.AbstractModeExpandJavaCodeNew;
+import weaver.formmode.customjavacode.modeexpand.baiduAiAipUtils.PushRobot;
 import weaver.general.Util;
 import weaver.hrm.User;
 import weaver.soa.workflow.request.RequestInfo;
@@ -26,7 +27,7 @@ import java.util.*;
 import java.util.zip.ZipInputStream;
 
 /**
- * 发票台账解析发票
+ * 创建 刘港 2022-5-5 发票台账解析发票
  */
 public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
     private Log log = LogFactory.getLog(AnalyzeInvoice.class.getName());
@@ -250,6 +251,7 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
                 String result = HttpUtil.post(url, getAuth(), param);
                 JSONObject jsonObject = JSONObject.parseObject(result);
                 if(jsonObject.containsKey("error_code")){
+                    PushRobot.pushRobot("调用文字识别API失败",jsonObject.getString("error_msg"));
                     throw new RuntimeException("文字识别失败");
                 }else{
                     JSONObject words_result = jsonObject.getJSONObject("words_result");
@@ -323,14 +325,14 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
                 }
             }
         }
-
         //插入明细
         RecordSet rs = new RecordSet();
         rs.execute("select id from uf_fptz where CAST(fp AS VARCHAR) = '"+fileld+"' order by id desc");
         if (rs.next()){
             String mainid = rs.getString("id");
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = null;
             for(Map<String,String> arr:hlist_det){
+                sb = new StringBuilder();
                 for(String fi : filelds_det){
                     if(sb.length() > 0){
                         sb.append(",");
