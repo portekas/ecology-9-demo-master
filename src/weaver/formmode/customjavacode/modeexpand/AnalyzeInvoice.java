@@ -38,6 +38,7 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
         Map<String, String> result = new HashMap<>();
         RecordSet rs = new RecordSet();
         User user = (User) param.get("user");
+        StringBuffer cffp = new StringBuffer();//记录已上传发票号码
         int billid = -1;//数据id
         try {
             RequestInfo requestInfo = (RequestInfo) param.get("RequestInfo");
@@ -70,11 +71,21 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
                 //遍历多个附件
                 for (String zzs : zzsfp.split(",")) {
                     JSONObject jsonobj = recognitionInvoice(url, zzs);
-                    //将数据插入表中
-                    addInvoiceData(fileids,jsonobj,zzs,user.getUID());
 
-                    //获取解析后的数据_遍历明细字段 并插入明细表
-                    addInvoiceDetailData(fileids_det,jsonobj,zzs);
+                    rs.executeQuery("select 1 from uf_fptz where InvoiceNum = '"+jsonobj.get("InvoiceNum")+"'");
+                    if (!rs.next()){
+                        //将数据插入表中
+                        addInvoiceData(fileids,jsonobj,zzs,user.getUID());
+
+                        //获取解析后的数据_遍历明细字段 并插入明细表
+                        addInvoiceDetailData(fileids_det,jsonobj,zzs);
+                    }else{
+                        if(cffp.length()>0){
+                            cffp.append(",");
+                        }
+                        cffp.append(jsonobj.get("InvoiceNum"));
+                    }
+
                 }
 
             }
@@ -85,14 +96,26 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
                 for (String pt : ptfp.split(",")) {
                     JSONObject jsonobj = recognitionInvoice(url, pt);
 
-                    //将数据插入表中
-                    addInvoiceData(fileids,jsonobj,pt,user.getUID());
+                    rs.executeQuery("select 1 from uf_fptz where InvoiceNum = '"+jsonobj.get("InvoiceNum")+"'");
+                    if (!rs.next()){
+                        //将数据插入表中
+                        addInvoiceData(fileids,jsonobj,pt,user.getUID());
 
-                    //获取解析后的数据_遍历明细字段 并插入明细表
-                    addInvoiceDetailData(fileids_det,jsonobj,pt);
+                        //获取解析后的数据_遍历明细字段 并插入明细表
+                        addInvoiceDetailData(fileids_det,jsonobj,pt);
+                    }else{
+                        if(cffp.length()>0){
+                            cffp.append(",");
+                        }
+                        cffp.append(jsonobj.get("InvoiceNum"));
+                    }
                 }
             }
 
+            if(cffp.length() != 0){
+                result.put("errmsg", "发票："+cffp.toString()+" 重复上传！");
+                result.put("flag", "false");
+            }
         }catch (Exception e){
 //            e.printStackTrace();
 
