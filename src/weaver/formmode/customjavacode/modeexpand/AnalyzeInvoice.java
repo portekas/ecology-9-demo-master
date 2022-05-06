@@ -8,6 +8,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import weaver.formmode.customjavacode.modeexpand.baiduAiAipUtils.ErrorMsgUtils;
 import weaver.formmode.customjavacode.modeexpand.baiduAiAipUtils.HttpUtil;
 import com.baidu.aip.util.Base64Util;
 import weaver.conn.RecordSet;
@@ -274,7 +275,8 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
                 String result = HttpUtil.post(url, getAuth(), param);
                 JSONObject jsonObject = JSONObject.parseObject(result);
                 if(jsonObject.containsKey("error_code")){
-                    PushRobot.pushRobot("调用文字识别API失败",jsonObject.getString("error_msg"));
+                    PushRobot.pushRobot("调用文字识别API失败",
+                            ErrorMsgUtils.errorMsgUtils(jsonObject.getString("error_code"),jsonObject.getString("error_code")));
                     throw new RuntimeException("文字识别失败");
                 }else{
                     JSONObject words_result = jsonObject.getJSONObject("words_result");
