@@ -554,25 +554,165 @@
         rs.executeUpdate("update uf_htylb set ddbh = ? where id = ?",new Object[]{par1,bid});
         out.print(json);
 
-    }else if("getHTGLCGDDPL".equals(operation)){
+    }else if("getHTGLCGDDPL".equals(operation)) {
         //合同管理采购订单-批量操作
         RecordSet rs2 = new RecordSet();
         //合同ID为空直接返回
-        if(StringUtils.isBlank(bid)){
+        if (StringUtils.isBlank(bid)) {
             return;
         }
-        for(String id : bid.split(",")){
-            rs.execute("select ddbh from "+par1+" where id = "+id);
-            if (rs.next()){
+        for (String id : bid.split(",")) {
+            rs.execute("select ddbh from " + par1 + " where id = " + id);
+            if (rs.next()) {
                 String ddbh = rs.getString("ddbh");
-                for(String ddid : ddbh.split(",")){
+                for (String ddid : ddbh.split(",")) {
                     rs2.executeUpdate("INSERT INTO uf_cghtglcgdd (htmc,ddbh,szzt) VALUES (?,?,?)"
-                            ,new Object[]{id,ddid,par2});
+                            , new Object[]{id, ddid, par2});
                 }
-                rs2.executeUpdate("update uf_htylb set ddbh = ? where id = ?",new Object[]{ddbh,id});
+                rs2.executeUpdate("update uf_htylb set ddbh = ? where id = ?", new Object[]{ddbh, id});
             }
         }
 
+        out.print(json);
+
+    }else if("getFPFQFKLC".equals(operation)){
+        //发票台账发起付款流程
+        StringBuilder fp = new StringBuilder();
+        String xsf = "";//销售方
+        String nsrsbh = "";//税号
+        String dzdh = "";//地址及电话
+        String dz = "";
+        String dh = "";
+        String khhzh = "";//开户行及账号
+        String khh = "";
+        String zh = "";
+        rs.executeQuery("select SellerName,SellerRegisterNum,SellerAddress,SellerBank from uf_fptz where id in ("+bid+")");
+        if (rs.next()){
+            xsf = rs.getString("SellerName");
+            nsrsbh = rs.getString("SellerRegisterNum");
+            dzdh = rs.getString("SellerAddress");
+            khhzh = rs.getString("SellerBank");
+        }
+        if(StringUtils.isNotBlank(nsrsbh)){
+            //拆分开户行及账号
+            char[] xsfch = khhzh.toCharArray();
+            for(int i = xsfch.length-1; i>=0; i--){
+                if(xsfch[i] < '0' ||  xsfch[i] > '9'){
+                    khh = khhzh.substring(0,i+1);
+                    zh = khhzh.substring(i+1);
+                    break;
+                }
+            }
+            //拆分地址及电话
+            char[] dzdhch = dzdh.toCharArray();
+            for(int i = dzdhch.length-1; i>=0; i--){
+                if((dzdhch[i] < '0' ||  dzdhch[i] > '9') && dzdhch[i] != '-') {
+                    dz = dzdh.substring(0,i+1);
+                    dh = dzdh.substring(i+1);
+                    break;
+                }
+            }
+
+            if("xmfk".equals(par1)){
+                //项目付款取供应商
+                rs.executeQuery("select id,gysbh,gysmc from uf_crmgys where sh = '"+nsrsbh+"' or gysmc = '"+xsf+"'");
+                if(rs.next()){
+                    //供应商存在
+                    json.put("gysbh",rs.getString("gysbh"));
+                    json.put("gysmc",rs.getString("gysmc"));
+                    rs.executeQuery("SELECT 1 FROM uf_crmgys_dt1 WHERE khx = '"+khh+"'");
+                    if(rs.next()){
+                        json.put("khh",khh);
+                    }
+                }else{
+                    //供应商不存在则新增
+                    String newCode = "";
+                    rs.executeQuery("SELECT currentCode,currentnumber FROM modecode WHERE id = '15'");
+                    if(rs.next()){
+                        String currentCode = rs.getString("currentCode");
+                        String currentnumber = rs.getString("currentnumber");
+
+                        String newTime = new SimpleDateFormat("yyyyMMdd").format(new Date());
+                        String code = "CG"+newTime;
+                        String oldCode = code+currentnumber;
+
+                        if(oldCode.equals(currentCode)){
+                            //当天更新过编号，编号+1
+                            String newNumber = String.format("%04d",Integer.valueOf(currentnumber)+1);
+                            newCode = code+newNumber;
+                            rs.executeUpdate("update modecode set currentCode = ? , currentnumber = ? WHERE id = '15'",
+                                    new Object[]{newCode,newNumber});
+                        }else{
+                            //当天没有更新过编号 重新生成编号
+                            newCode = code+"0001";
+                            rs.executeUpdate("update modecode set currentCode = ? , currentnumber = ? WHERE id = '15'",
+                                    new Object[]{newCode,"0001"});
+                        }
+                    }
+
+                    //数据插入供应商表
+                    rs.executeUpdate("INSERT INTO  uf_crmgys (khlb,gysmc,sh,khdz,dh,khx,zh,formmodeid,modedatacreater,modedatacreatedate,modedatacreatetime,gysbh,djr,djrq) " +
+                            "VALUES(0,'"+xsf+"','"+nsrsbh+"','"+dz+"','"+dh+"','"+khh+"','"+zh+"',93,"+user.getUID()
+                            +",'"+new SimpleDateFormat("yyyy-MM-dd").format(new Date())+"'"
+                            +",'"+new SimpleDateFormat("HH:mm:ss").format(new Date())+"'"
+                            +",'"+newCode+"'"
+                            +","+user.getUID()
+                            +",'"+new SimpleDateFormat("yyyy-MM-dd").format(new Date())+"')");
+                    json.put("gysbh",newCode);
+                    json.put("gysmc",xsf);
+                }
+            }else if("bmfk".equals(par1)){
+                //部门付款取客商
+                rs.executeQuery("select id,khbh,khmc from uf_crmkhb where sh = '"+nsrsbh+"' or khmc = '"+xsf+"'");
+                if(rs.next()){
+                    //客户存在
+                    json.put("khbh",rs.getString("khbh"));
+                    json.put("khmc",rs.getString("khmc"));
+                    rs.executeQuery("SELECT 1 FROM uf_crmkhb_dt1 WHERE khx = '"+khh+"'");
+                    if(rs.next()){
+                        json.put("khh",khh);
+                    }
+
+                }else{
+                    //客户不存在则新增
+                    String newCode = "";
+                    rs.executeQuery("SELECT currentCode,currentnumber FROM modecode WHERE id = '14'");
+                    if(rs.next()){
+                        String currentCode = rs.getString("currentCode");
+                        String currentnumber = rs.getString("currentnumber");
+
+                        String newTime = new SimpleDateFormat("yyyyMMdd").format(new Date());
+                        String code = "CK"+newTime;
+                        String oldCode = code+currentnumber;
+
+                        if(oldCode.equals(currentCode)){
+                            //当天更新过编号，编号+1
+                            String newNumber = String.format("%04d",Integer.valueOf(currentnumber)+1);
+                            newCode = code+newNumber;
+                            rs.executeUpdate("update modecode set currentCode = ? , currentnumber = ? WHERE id = '14'",
+                                    new Object[]{newCode,newNumber});
+                        }else{
+                            //当天没有更新过编号 重新生成编号
+                            newCode = code+"0001";
+                            rs.executeUpdate("update modecode set currentCode = ? , currentnumber = ? WHERE id = '14'",
+                                    new Object[]{newCode,"0001"});
+                        }
+                    }
+
+                    //数据插入客户表
+                    rs.executeUpdate("INSERT INTO  uf_crmkhb (khlb,khmc,sh,khdz,dh,khx,zh,formmodeid,modedatacreater,modedatacreatedate,modedatacreatetime,khbh,djr,djrq) " +
+                            "VALUES(0,'"+xsf+"','"+nsrsbh+"','"+dz+"','"+dh+"','"+khh+"','"+zh+"',72,"+user.getUID()
+                            +",'"+new SimpleDateFormat("yyyy-MM-dd").format(new Date())+"'"
+                            +",'"+new SimpleDateFormat("HH:mm:ss").format(new Date())+"'"
+                            +",'"+newCode+"'"
+                            +","+user.getUID()
+                            +",'"+new SimpleDateFormat("yyyy-MM-dd").format(new Date())+"')");
+                    json.put("khbh",newCode);
+                    json.put("khmc",xsf);
+                }
+
+            }
+        }
         out.print(json);
     }
 
