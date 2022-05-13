@@ -36,6 +36,7 @@
      * 新增 刘港 2022-04-08 新增 getSyncYYLedger CRM供应商页面按钮调用 同步用友供应商帐套，调用存储过程sp_insertbase
      * 新增 刘港 2022-04-19 新增 getHTGLCGDD 合同关联采购订单，用于采购合同智能关联订单查询，手动选择关联订单操作
      * 新增 刘港 2022-04-19 新增 getHTGLCGDDPL 合同关联采购订单，用于采购合同智能关联订单查询，勾选自动关联订单操作
+     * 新增 刘港 2022-05-12 新增 getFPFQFKLC 发票台账发起付款流程 获取客商或供应商 没有则新增客商或供应商
      */
     response.setHeader("cache-control", "no-cache");
     response.setHeader("pragma", "no-cache");
@@ -629,25 +630,15 @@
                     String newCode = "";
                     rs.executeQuery("SELECT currentCode,currentnumber FROM modecode WHERE id = '15'");
                     if(rs.next()){
-                        String currentCode = rs.getString("currentCode");
                         String currentnumber = rs.getString("currentnumber");
 
                         String newTime = new SimpleDateFormat("yyyyMMdd").format(new Date());
-                        String code = "CG"+newTime;
-                        String oldCode = code+currentnumber;
+                        String code = "CGZ"+newTime;
 
-                        if(oldCode.equals(currentCode)){
-                            //当天更新过编号，编号+1
-                            String newNumber = String.format("%04d",Integer.valueOf(currentnumber)+1);
-                            newCode = code+newNumber;
-                            rs.executeUpdate("update modecode set currentCode = ? , currentnumber = ? WHERE id = '15'",
-                                    new Object[]{newCode,newNumber});
-                        }else{
-                            //当天没有更新过编号 重新生成编号
-                            newCode = code+"0001";
-                            rs.executeUpdate("update modecode set currentCode = ? , currentnumber = ? WHERE id = '15'",
-                                    new Object[]{newCode,"0001"});
-                        }
+                        String newNumber = String.format("%04d",Integer.valueOf(currentnumber)+1);
+                        newCode = code+newNumber;
+                        rs.executeUpdate("update modecode set  currentnumber = ? WHERE id = '15'",
+                                new Object[]{newNumber});
                     }
 
                     //数据插入供应商表
@@ -660,6 +651,7 @@
                             +",'"+new SimpleDateFormat("yyyy-MM-dd").format(new Date())+"')");
                     json.put("gysbh",newCode);
                     json.put("gysmc",xsf);
+                    json.put("message","未查询到相应供应商，已自动新增。");
                 }
             }else if("bmfk".equals(par1)){
                 //部门付款取客商
@@ -678,25 +670,15 @@
                     String newCode = "";
                     rs.executeQuery("SELECT currentCode,currentnumber FROM modecode WHERE id = '14'");
                     if(rs.next()){
-                        String currentCode = rs.getString("currentCode");
                         String currentnumber = rs.getString("currentnumber");
-
                         String newTime = new SimpleDateFormat("yyyyMMdd").format(new Date());
-                        String code = "CK"+newTime;
-                        String oldCode = code+currentnumber;
+                        String code = "CKZ"+newTime;
 
-                        if(oldCode.equals(currentCode)){
-                            //当天更新过编号，编号+1
-                            String newNumber = String.format("%04d",Integer.valueOf(currentnumber)+1);
-                            newCode = code+newNumber;
-                            rs.executeUpdate("update modecode set currentCode = ? , currentnumber = ? WHERE id = '14'",
-                                    new Object[]{newCode,newNumber});
-                        }else{
-                            //当天没有更新过编号 重新生成编号
-                            newCode = code+"0001";
-                            rs.executeUpdate("update modecode set currentCode = ? , currentnumber = ? WHERE id = '14'",
-                                    new Object[]{newCode,"0001"});
-                        }
+                        //当天更新过编号，编号+1
+                        String newNumber = String.format("%04d",Integer.valueOf(currentnumber)+1);
+                        newCode = code+newNumber;
+                        rs.executeUpdate("update modecode set currentnumber = ? WHERE id = '14'",
+                                new Object[]{newNumber});
                     }
 
                     //数据插入客户表
@@ -709,8 +691,8 @@
                             +",'"+new SimpleDateFormat("yyyy-MM-dd").format(new Date())+"')");
                     json.put("khbh",newCode);
                     json.put("khmc",xsf);
+                    json.put("message","未查询到相应客商，已自动新增。");
                 }
-
             }
         }
         out.print(json);
