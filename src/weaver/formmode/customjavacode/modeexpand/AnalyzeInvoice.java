@@ -319,9 +319,11 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
             sb_value.append(data.get("value"));
             sb_value.append("'");
         }
-        rs.executeUpdate("INSERT INTO uf_fptz ("+sb_fileld.toString()+",sbjg,fp,formmodeid,modedatacreater,modedatacreatedate) " +
+        String cdata = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        String ctime = new SimpleDateFormat("HH:mm:ss").format(new Date());
+        rs.executeUpdate("INSERT INTO uf_fptz ("+sb_fileld.toString()+",sbjg,fp,formmodeid,modedatacreater,modedatacreatedate,modedatacreatetime) " +
                         "VALUES ("+sb_value.toString()+",'"+jsonobj.toString()+"','"+fileld+"',301," +
-                uid+","+ new SimpleDateFormat("yyyy-MM-dd").format(new Date()) +")");
+                uid+",'"+ cdata +"','"+ctime+"')");
     }
 
     /**
