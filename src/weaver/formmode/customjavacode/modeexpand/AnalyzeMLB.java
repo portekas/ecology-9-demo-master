@@ -3,16 +3,12 @@ package weaver.formmode.customjavacode.modeexpand;
 import org.apache.commons.lang.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import weaver.conn.RecordSet;
 import weaver.file.AESCoder;
 import weaver.formmode.customjavacode.AbstractModeExpandJavaCodeNew;
-import weaver.formmode.log.FormmodeLog;
 import weaver.general.Util;
 import weaver.hrm.User;
 import weaver.soa.workflow.request.RequestInfo;
@@ -90,14 +86,17 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
                 }
             }
         } catch (Exception e) {
-//            e.printStackTrace();
+            result.put("errmsg", e.getMessage());
+//            result.put("errmsg", "    无法识别毛利表附件，请检查是否与模板一致    ");
+            result.put("flag", "false");
+            e.printStackTrace();
 
             ByteArrayOutputStream ba = new ByteArrayOutputStream();
             e.printStackTrace(new PrintStream(ba));
             log.error(ba.toString());
 
-            result.put("errmsg", "    无法识别毛利表附件，请检查是否与模板一致    ");
-            result.put("flag", "false");
+
+
         }
         return result;
     }
@@ -200,7 +199,6 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
                         continue;
                     }
                     mlmap.put("km"+i,km.toString());
-                    log.error("金额的值为："+je.toString());
                     mlmap.put("je"+i,String.valueOf(je.getNumericCellValue()));
                 }
             }
@@ -342,18 +340,32 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
             return mllist;
         }
         // 总行数
-        int totoalRows = sheetAt.getLastRowNum();
+//        int totoalRows = sheetAt.getLastRowNum();
         //遍历明细
-        for(int i = 1; i < totoalRows; i++){
+        int num = 0;
+        boolean rowEmpty = true;
+        while (rowEmpty){
+            num ++;
+            Row row = sheetAt.getRow(num);
             arr = new Object[11];
-            Row row = sheetAt.getRow(i);
+            if(row == null || StringUtils.isBlank(String.valueOf(row.getCell(0))) || num == 200){
+                rowEmpty = false;
+                break;
+            }
             for(int j = 0; j< 8; j++){
                 Cell km = row.getCell(j);
                 if(km == null){
                     continue;
                 }
-//                km.setCellType(CellType.STRING);//设置字符串类型
-                arr[j] = km.toString();
+                if(j < 5){
+                    //前5行取文字
+                    arr[j] = km.toString();
+                }else{
+                    //后三行取数字
+//                    arr[j] = km.getNumericCellValue();
+                    km.setCellType(CellType.STRING);//设置字符串类型
+                    arr[j] = km.getStringCellValue();
+                }
             }
             arr[8] = xmid;
             arr[9] = xmbh;
