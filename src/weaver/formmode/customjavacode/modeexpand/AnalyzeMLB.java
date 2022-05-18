@@ -83,20 +83,18 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
 
                     //保存预算清单数据
                     addYQDetail(qdlist,billid);
+
+                    hssfWorkbook.close();
                 }
             }
         } catch (Exception e) {
-            result.put("errmsg", e.getMessage());
-//            result.put("errmsg", "    无法识别毛利表附件，请检查是否与模板一致    ");
+            result.put("errmsg", "    无法识别毛利表附件，请检查是否与模板一致    ");
             result.put("flag", "false");
-            e.printStackTrace();
+//            e.printStackTrace();
 
             ByteArrayOutputStream ba = new ByteArrayOutputStream();
             e.printStackTrace(new PrintStream(ba));
             log.error(ba.toString());
-
-
-
         }
         return result;
     }
@@ -333,23 +331,26 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
         Object[] arr;
 
         //解析预算清单
-        Sheet sheetAt = hssfWorkbook.getSheetAt(1);
-        String sheetname = sheetAt.getSheetName();
-        //第二页签不是预算明细则不用解析
-        if(sheetname.indexOf("预算") == -1){
-            return mllist;
+        Sheet sheetAt = null;
+        for(int i =1;i<hssfWorkbook.getNumberOfSheets();i++){
+            sheetAt = hssfWorkbook.getSheetAt(i);
+            String sheetname = sheetAt.getSheetName();
+            //找到预算清单页
+            if(sheetname.indexOf("预算") > -1){
+                break;
+            }
         }
-        // 总行数
-//        int totoalRows = sheetAt.getLastRowNum();
-        //遍历明细
-        int num = 0;
-        boolean rowEmpty = true;
-        while (rowEmpty){
-            num ++;
+
+        //没有预算页不用读取
+        if(sheetAt == null){
+            return null;
+        }
+
+        //遍历明细,只遍历前200行
+        for(int num= 1;num < 200;num++){
             Row row = sheetAt.getRow(num);
             arr = new Object[11];
-            if(row == null || StringUtils.isBlank(String.valueOf(row.getCell(0))) || num == 200){
-                rowEmpty = false;
+            if(row == null || StringUtils.isBlank(String.valueOf(row.getCell(0)))){
                 break;
             }
             for(int j = 0; j< 8; j++){
