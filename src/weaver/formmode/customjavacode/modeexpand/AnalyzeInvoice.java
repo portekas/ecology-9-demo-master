@@ -280,6 +280,10 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
                     throw new RuntimeException("文字识别失败");
                 }else{
                     JSONObject words_result = jsonObject.getJSONObject("words_result");
+
+                    //修改发票附件文件名
+                    updateInvoiceFileName(fileid,words_result,imagefilename);
+
                     return words_result;
                 }
             }
@@ -373,6 +377,26 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
                 rs.executeUpdate("INSERT INTO uf_fptz_dt1 ("+String.join(",", filelds_det)+",mainid) VALUES ("+sb.toString()+","+mainid+")");
             }
         }
+    }
+
+    /**
+     * 更新发票附件名称 用发票编号+金额命名
+     * @param fileid 发票附件ID
+     * @param jsonobj 发票识别结果
+     * @param filename 发票附件名
+     */
+    public void updateInvoiceFileName(String fileid,JSONObject jsonobj,String filename){
+        String InvoiceNum = jsonobj.getString("InvoiceNum");
+        String AmountInFiguers = jsonobj.getString("AmountInFiguers");
+        String name = InvoiceNum+"_"+AmountInFiguers;
+        String newName = name+filename.substring(filename.lastIndexOf("."));
+        RecordSet rs = new RecordSet();
+        rs.executeUpdate("update imagefile set imagefilename = '"+newName+"' where " +
+                "imagefileid in (SELECT imagefileid from docimagefile WHERE docid = '"+fileid+"')");
+
+        rs.executeUpdate("update docimagefile SET imagefilename = '"+newName+"' WHERE docid = '"+fileid+"'");
+
+        rs.executeUpdate("update DocDetail SET docsubject = '"+name+"' WHERE id ='"+fileid+"'");
     }
 
 }
