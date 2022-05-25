@@ -28,7 +28,7 @@ import java.util.*;
 import java.util.zip.ZipInputStream;
 
 /**
- * 创建 刘港 2022-5-5 发票台账解析发票
+ * 创建 刘港 2022-5-24 发票台账删除时校验是否已发起流程，已发起流程禁止删除
  */
 public class VerDeleteInvoice extends AbstractModeExpandJavaCodeNew {
 
