@@ -1,7 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
 <head>
-    <title>退出</title>
+    <title>退出成功</title>
 
 <script type="text/javascript" src="/cloudstore/resource/pc/jquery/jquery.min.js"></script>
 <script>
