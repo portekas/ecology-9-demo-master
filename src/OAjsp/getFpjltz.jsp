@@ -33,7 +33,7 @@
         if (rs.next()) {
             sf = "0";
         }else{
-            rs.executeQuery("SELECT 1 from uf_fptz where InvoiceNum = '"+tfpbh+"' AND zflc IS NOT NULL ");
+            rs.executeQuery("SELECT 1 from uf_fptz where InvoiceNum = '"+tfpbh+"' AND zflc IS NOT NULL AND zflc <> '" + lcid + "'");
             if (rs.next()) {
                 sf = "0";
             }
