@@ -383,7 +383,7 @@
         out.print(objArr);
 
     }else if("addHYJBSXGJ".equals(operation)) {
-        //添加会议交办事项跟进记录
+        //添加交办事项跟进记录
 
         String fmdid = Util.null2String(request.getParameter("fmdid"));//事项ID
         String gjjl = Util.null2String(request.getParameter("gjjl"));//跟进内容
@@ -759,13 +759,20 @@
         }
         out.print(json);
 
-    }else if("bindGYSKS".equals(operation)){
+    }else if("bindGYSKS".equals(operation)) {
         //供应商、客商台账绑定发票
         if ("xmfk".equals(par1)) {
-            rs.executeSql("update uf_fptz set SellerName = uc.gysmc FROM  uf_crmgys uc WHERE uc.id = '"+par2+"' AND uf_fptz.id IN ("+bid+")");
+            rs.executeSql("update uf_fptz set SellerName = uc.gysmc FROM  uf_crmgys uc WHERE uc.id = '" + par2 + "' AND uf_fptz.id IN (" + bid + ")");
 
         } else if ("bmfk".equals(par1)) {
-            rs.executeSql("update uf_fptz set SellerName = khmc FROM  uf_crmkhb uc WHERE uc.id = '"+par2+"' AND uf_fptz.id IN ("+bid+")");
+            rs.executeSql("update uf_fptz set SellerName = khmc FROM  uf_crmkhb uc WHERE uc.id = '" + par2 + "' AND uf_fptz.id IN (" + bid + ")");
+        }
+        out.print(json);
+
+    }else if("getwjyyzllx".equals(operation)){
+        rs.executeQuery("select 1 from uf_yysqgzzlflpz where zllx = "+par1+" AND (',' + CONVERT(VARCHAR(MAX), dygw) + ',' LIKE '%,"+par2+",%' ESCAPE '/') ");
+        if(rs.next()){
+            json.put("ishave","true");
         }
         out.print(json);
     }
