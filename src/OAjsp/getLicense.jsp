@@ -29,7 +29,7 @@
      * getXMZTCQX ：项目模块，按当前用户的角色获取左侧按钮
      * getXMZJLS ： 项目模块，获取资金的收入、支出金额
      * 新增 刘港 2022-01-14 新增会议交办事项跟进记录提交方法
-     * 修改 刘港 2022-02-16 修改 getXMZTCQX 添加查询当前用户在当前项目中的岗位，添加查询当前用户角色、当前用户岗位对应按钮
+     * 修改 刘港 2022-02-16 修改 getXMZTCQX 添加 项目直通车按钮权限 查询当前用户在当前项目中的岗位，添加查询当前用户角色、当前用户岗位对应按钮
      * 新增 刘港 2022-03-14 新增 getZTCZA 获取直通车质安抽查、质安处罚、采购、人工费、结算单（人工费）统计数据
      * 修改 刘港 2022-03-16 修改 getZTCZA 添加劳务费用结算评审流程统计，工程-结算单(人工费)流程统计
      * 新增 刘港 2022-3-31 新增 getYSCLQDFH 添加预算清单材料复核功能，调用存储过程XDOA_gcysqdsysljd
@@ -262,7 +262,10 @@
         }
 
         //查询角色或项目成员岗位对应按钮
-        rs.executeSql("SELECT an FROM uf_xmztcqxpz WHERE ',' + CONVERT(VARCHAR(MAX), xmcygwqx) + ',' LIKE '%,"+ gw +",%' ESCAPE '/' "+roleIds.toString());
+        rs.executeSql("SELECT an FROM uf_xmztcqxpz WHERE ',' + CONVERT(VARCHAR(MAX), xmcygwqx) + ',' LIKE '%,"+ gw +",%' ESCAPE '/' " +
+                "OR ',' + CONVERT(VARCHAR(MAX), bmqx) + ',' LIKE '%,"+user.getUserDepartment()+",%' ESCAPE '/'" +
+                "OR ',' + CONVERT(VARCHAR(MAX), ryqx) + ',' LIKE '%,"+user.getUID()+",%' ESCAPE '/'" +
+                roleIds.toString());
         StringBuilder ans = new StringBuilder();
         while (rs.next()){
             if(!"".equals(ans.toString())){
@@ -513,10 +516,6 @@
             }
         }
         out.print(json);
-
-//    }else if("getCheckLogout".equals(operation){
-//
-////        http://220.189.214.90:2019/api/hrm/login/checkLogout?status=1
 
     }else if("getRKDZT".equals(operation)){
         //获取入库单账套金额
