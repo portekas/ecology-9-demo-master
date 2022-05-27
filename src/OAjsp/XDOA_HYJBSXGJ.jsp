@@ -24,9 +24,7 @@
     Map<String,String> resMap = new HashMap<>();
     String sql = "SELECT selectvalue,selectname FROM workflow_SelectItem WHERE fieldid = '29657'";
     rs.executeSql(sql);
-    rs.writeLog("输出sql:"+sql);
     while(rs.next()){
-        rs.writeLog("结果"+rs.getString("selectname"));
         resMap = new HashMap<>();
         resMap.put("selectvalue",rs.getString("selectvalue"));
         resMap.put("selectname",rs.getString("selectname"));
