@@ -31,7 +31,7 @@ import java.util.zip.ZipInputStream;
  * 创建 刘港 2022-5-5 发票台账解析发票
  */
 public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
-    private Log log = LogFactory.getLog(AnalyzeInvoice.class.getName());
+    private Log log = LogFactory.getLog(this.getClass().getName());
     static String Auth = null;
 
     @Override
@@ -52,7 +52,6 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
                 zzsfp = rs.getString("zzsfp");
                 ptfp = rs.getString("ptfp");
             }
-
             //主表字段
             List<String> fileids = new ArrayList<>();
             rs.executeQuery("SELECT fieldname  FROM workflow_billfield WHERE billid = '-678' AND viewtype = '0'");
@@ -71,7 +70,7 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
                 String url = "https://aip.baidubce.com/rest/2.0/ocr/v1/vat_invoice";
                 //遍历多个附件
                 for (String zzs : zzsfp.split(",")) {
-                    JSONObject jsonobj = recognitionInvoice(url, zzs);
+                    JSONObject jsonobj = recognitionInvoice(url, zzs ,user);
 
                     rs.executeQuery("select 1 from uf_fptz where InvoiceNum = '"+jsonobj.get("InvoiceNum")+"'");
                     if (!rs.next()){
@@ -95,7 +94,7 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
             if (StringUtils.isNotBlank(ptfp)) {
                 String url = "https://aip.baidubce.com/rest/2.0/ocr/v1/invoice";
                 for (String pt : ptfp.split(",")) {
-                    JSONObject jsonobj = recognitionInvoice(url, pt);
+                    JSONObject jsonobj = recognitionInvoice(url, pt,user);
 
                     rs.executeQuery("select 1 from uf_fptz where InvoiceNum = '"+jsonobj.get("InvoiceNum")+"'");
                     if (!rs.next()){
@@ -119,7 +118,7 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
             }
         }catch (Exception e){
 //            e.printStackTrace();
-
+            log.error(e.getMessage());
             ByteArrayOutputStream ba = new ByteArrayOutputStream();
             e.printStackTrace(new PrintStream(ba));
             log.error(ba.toString());
@@ -217,12 +216,11 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
      * @param fileid 需要识别的附件ID
      * @return
      */
-    public JSONObject recognitionInvoice(String url,String fileid) throws Exception{
+    public JSONObject recognitionInvoice(String url,String fileid,User user) throws Exception{
         RecordSet rs = new RecordSet();
             //查询附件
             rs.executeQuery("SELECT imagefilename,filerealpath,iszip,isaesencrypt,aescode FROM imagefile WHERE imagefileid = (SELECT imagefileid from docimagefile WHERE docid = ?)"
                     , new Object[]{fileid});
-
             if (rs.next()) {
                 InputStream inputStream = null;
                 //文件路径
@@ -252,33 +250,40 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
                     inputStream = AESCoder.decrypt((InputStream) inputStream, aescode);
                 }
                 byte[] imgData = IOUtils.toByteArray(inputStream);
+                log.error("进来了----3-3。。");
+                String imgParam = "";
+                try {
+                    String imgStr = Base64Util.encode(imgData);log.error("进来了----3-4");
+                     imgParam = URLEncoder.encode(imgStr, "UTF-8");log.error("进来了----3-5");
+                }catch (Exception e){
+                    log.error(e.getMessage());
+                    e.printStackTrace();
+                }
 
-                String imgStr = Base64Util.encode(imgData);
-                String imgParam = URLEncoder.encode(imgStr, "UTF-8");
 
                 String filetype = "";
                 String param = "";
                 if (imagefilename.indexOf(".") > -1) {
                     filetype = imagefilename.substring(imagefilename.lastIndexOf(".") + 1);
-                }
+                }log.error("进来了----3-6");
                 if ("jpg".equalsIgnoreCase(filetype) || "jpeg".equalsIgnoreCase(filetype)
                         || "png".equalsIgnoreCase(filetype) || "bmp".equalsIgnoreCase(filetype)) {
                     param = "image=" + imgParam;
-                }
+                }log.error("进来了----3-7");
                 if("pdf".equalsIgnoreCase(filetype)){
                     param = "pdf_file=" + imgParam;
-                }
+                }log.error("进来了----3-4");
                 //文件不支持
                 if(StringUtils.isBlank(param)){
                     return null;
-                }
+                }log.error("进来了----4");
                 String result = HttpUtil.post(url, getAuth(), param);
-                JSONObject jsonObject = JSONObject.parseObject(result);
-                if(jsonObject.containsKey("error_code")){
-                    PushRobot.pushRobot("调用文字识别API失败",
+                JSONObject jsonObject = JSONObject.parseObject(result);log.error("进来了----5");
+                if(jsonObject.containsKey("error_code")){log.error("进来了----6");
+                    PushRobot.pushRobot(user.getFirstname()+"调用文字识别API失败",
                             ErrorMsgUtils.errorMsgUtils(jsonObject.getString("error_code"),jsonObject.getString("error_code")));
                     throw new RuntimeException("文字识别失败");
-                }else{
+                }else{log.error("进来了----7");
                     JSONObject words_result = jsonObject.getJSONObject("words_result");
 
                     //修改发票附件文件名
