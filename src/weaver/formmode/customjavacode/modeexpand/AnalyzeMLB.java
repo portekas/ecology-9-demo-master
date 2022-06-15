@@ -346,8 +346,8 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
             return null;
         }
 
-        //遍历明细,只遍历前200行
-        for(int num= 1;num < 200;num++){
+        //遍历明细,只遍历前500行
+        for(int num= 1;num < 500;num++){
             Row row = sheetAt.getRow(num);
             arr = new Object[11];
             if(row == null || StringUtils.isBlank(String.valueOf(row.getCell(0)))){
