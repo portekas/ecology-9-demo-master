@@ -26,7 +26,7 @@ import java.util.zip.ZipInputStream;
  * 修改 刘港 2022-3-10 添加计算毛利三的毛利金额和毛利率
  */
 public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
-    private Log log = LogFactory.getLog(AnalyzeMLB.class.getName());
+    private Log log = LogFactory.getLog(this.getClass().getName());
 
     public Map<String, String> doModeExpand(Map<String, Object> param) {
         Map<String, String> result = new HashMap<String, String>();
@@ -53,12 +53,12 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
                         mlbfj = Util.null2String(rs.getString("mlbfj"));
                         fpsl = Util.null2String(rs.getString("fpsl"));
 
-                        if(StringUtils.isNotBlank(fpsl)){
+                        if (StringUtils.isNotBlank(fpsl)) {
                             new Exception("发票税率不能为空");
                         }
 
-                        rs.executeQuery("select xmlb from uf_xmb where id = ?",new Object[]{xmmc});
-                        if(rs.next()){
+                        rs.executeQuery("select xmlb from uf_xmb where id = ?", new Object[]{xmmc});
+                        if (rs.next()) {
                             xmlb = Util.null2String(rs.getString("xmlb"));
                         }
                     }
@@ -73,20 +73,25 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
                     List<Map<String, String>> mllist = fileAnalyze(hssfWorkbook);
 
                     //计算毛利三
-                    calML3(mllist,fpsl,xmlb);
+                    calML3(mllist, fpsl, xmlb);
 
                     //保存毛利数据到明细中
-                    addMLDetail(mllist,billid,xmmc);
+                    addMLDetail(mllist, billid, xmmc);
 
                     //获取预算清单
-                    List<Object[]> qdlist = fileAnalyzeYSQD(hssfWorkbook,xmmc,xmbh);
+                    List<Object[]> qdlist = fileAnalyzeYSQD(hssfWorkbook, xmmc, xmbh);
 
                     //保存预算清单数据
-                    addYQDetail(qdlist,billid);
+                    addYQDetail(qdlist, billid);
 
                     hssfWorkbook.close();
                 }
             }
+
+        } catch (RuntimeException e) {
+            result.put("errmsg", "    "+e.getMessage()+"    ");
+            result.put("flag", "false");
+
         } catch (Exception e) {
             result.put("errmsg", "    无法识别毛利表附件，请检查是否与模板一致    ");
             result.put("flag", "false");
@@ -384,10 +389,15 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
     public void addYQDetail(List<Object[]> yslist,int mainid) throws Exception{
         RecordSet rs = new RecordSet();
         if(yslist != null && yslist.size() > 0){
-            rs.execute("delete uf_gcysqd where mainid = "+mainid);
-            for(int i=0; i< yslist.size(); i++){
-                rs.executeUpdate("INSERT INTO uf_gcysqd (qdxmc,qdxsm,pp,ggxh,qdxdw,qdxsl,dj,zj,xmmc,gcxmbh,sysl,mainid,formmodeid,qdxfl,yysl,djsl)" +
-                        " VALUES (?,?,?,?,?,?,?,?,?,?,?,"+mainid+",58,0,0,0)" ,yslist.get(i));
+            rs.execute("select sum(yysl) as zyysl from uf_gcysqd where mainid = "+mainid);
+            if(!rs.next() || rs.getInt("zyysl") == 0){
+                rs.execute("delete uf_gcysqd where mainid = "+mainid);
+                for(int i=0; i< yslist.size(); i++){
+                    rs.executeUpdate("INSERT INTO uf_gcysqd (qdxmc,qdxsm,pp,ggxh,qdxdw,qdxsl,dj,zj,xmmc,gcxmbh,sysl,mainid,formmodeid,qdxfl,yysl,djsl)" +
+                            " VALUES (?,?,?,?,?,?,?,?,?,?,?,"+mainid+",58,0,0,0)" ,yslist.get(i));
+                }
+            }else{
+                new RuntimeException("预算清单已采购");
             }
         }
     }
