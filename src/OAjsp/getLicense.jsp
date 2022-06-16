@@ -493,30 +493,40 @@
 
     }else if("getSyncYYLedger".equals(operation)) {
         //同步用友供应商帐套
-        rs.executeQuery("SELECT gysmc,gysbh,glgs FROM uf_crmgys where id = " + bid);
-        if (rs.next()) {
-            String gysbh = rs.getString("gysbh");
-            String gysmc = rs.getString("gysmc");
-            String glgs = rs.getString("glgs");
-            rs.executeQuery("SELECT 1 FROM uf_OAU8DY WHERE oadm = '" + gysbh + "'");
-            if (!rs.next()) {
-                DataSource ds = (DataSource) StaticObj.getServiceByFullname(("datasource.U8_GC"), DataSource.class);
-                Connection conn = ds.getConnection();
-                PreparedStatement psm = conn.prepareStatement("EXEC sp_insertbase ?,?,?,?");
-                psm.setString(1, gysbh);
-                psm.setString(2, gysmc);
-                psm.setString(3, glgs);
-                psm.setString(4, "供应商");
-                psm.execute();
-                try {
-                    psm.close();
-                    conn.close();
-                } catch (SQLException s) {
-                    s.printStackTrace();
+        String[] ids = bid.split(",");
+        String exgys = "";
+        for(String id : ids){
+            rs.executeQuery("SELECT gysmc,gysbh,glgs FROM uf_crmgys where id = " + id);
+            if (rs.next()) {
+                String gysbh = rs.getString("gysbh");
+                String gysmc = rs.getString("gysmc");
+                String glgs = rs.getString("glgs");
+                rs.executeQuery("SELECT 1 FROM uf_OAU8DY WHERE oadm = '" + gysbh + "'");
+                if (!rs.next()) {
+                    DataSource ds = (DataSource) StaticObj.getServiceByFullname(("datasource.U8_GC"), DataSource.class);
+                    Connection conn = ds.getConnection();
+                    PreparedStatement psm = conn.prepareStatement("EXEC sp_insertbase ?,?,?,?");
+                    psm.setString(1, gysbh);
+                    psm.setString(2, gysmc);
+                    psm.setString(3, glgs);
+                    psm.setString(4, "供应商");
+                    psm.execute();
+                    try {
+                        psm.close();
+                        conn.close();
+                    } catch (SQLException s) {
+                        s.printStackTrace();
+                    }
+                }else{
+                    if(StringUtils.isNotBlank(exgys)){
+                        exgys += ",";
+                    }
+                    exgys += gysmc;
                 }
-            }else{
-                json.put("msg","对应表中已存在该供应商");
             }
+        }
+        if(StringUtils.isNotBlank(exgys)){
+            json.put("msg","对应表中已存在 "+exgys+" 供应商");
         }
         out.print(json);
 
