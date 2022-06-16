@@ -265,6 +265,7 @@
         rs.executeSql("SELECT an FROM uf_xmztcqxpz WHERE ',' + CONVERT(VARCHAR(MAX), xmcygwqx) + ',' LIKE '%,"+ gw +",%' ESCAPE '/' " +
                 "OR ',' + CONVERT(VARCHAR(MAX), bmqx) + ',' LIKE '%,"+user.getUserDepartment()+",%' ESCAPE '/'" +
                 "OR ',' + CONVERT(VARCHAR(MAX), ryqx) + ',' LIKE '%,"+user.getUID()+",%' ESCAPE '/'" +
+                "OR sfgk = '0'" +
                 roleIds.toString());
         StringBuilder ans = new StringBuilder();
         while (rs.next()){
@@ -513,6 +514,8 @@
                 } catch (SQLException s) {
                     s.printStackTrace();
                 }
+            }else{
+                json.put("msg","对应表中已存在该供应商");
             }
         }
         out.print(json);
