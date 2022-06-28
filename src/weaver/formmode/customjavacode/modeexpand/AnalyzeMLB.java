@@ -390,7 +390,7 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
         RecordSet rs = new RecordSet();
         if(yslist != null && yslist.size() > 0){
             rs.execute("select sum(yysl) as zyysl from uf_gcysqd where mainid = "+mainid);
-            if(!rs.next() || rs.getInt("zyysl") == 0){
+            if(!rs.next() || StringUtils.isBlank(rs.getString("zyysl")) || rs.getInt("zyysl") == 0 ){
                 rs.execute("delete uf_gcysqd where mainid = "+mainid);
                 for(int i=0; i< yslist.size(); i++){
                     rs.executeUpdate("INSERT INTO uf_gcysqd (qdxmc,qdxsm,pp,ggxh,qdxdw,qdxsl,dj,zj,xmmc,gcxmbh,sysl,mainid,formmodeid,qdxfl,yysl,djsl)" +
