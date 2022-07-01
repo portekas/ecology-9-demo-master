@@ -5,6 +5,7 @@
 <%@ page import="weaver.hrm.*" %>
 <%@ page import="org.json.JSONObject" %>
 <%@ page import="org.apache.commons.lang3.StringUtils" %>
+<%@ page import="weaver.hrm.resource.ResourceComInfo" %>
 <%@ page trimDirectiveWhitespaces="true" %>
 <%@ page isELIgnored="false"%>
 <jsp:useBean id="rci" class="weaver.hrm.resource.ResourceComInfo" scope="page"/>
@@ -40,7 +41,11 @@
                         "managerid = '"+sj+"' " +
                         "where id ='"+ry+"'");
 
-                //更新个人信息缓存
+                //更新表缓存
+                ResourceComInfo rc = new ResourceComInfo();
+                rc.updateResourceInfoCache(ry);
+
+                //更新对象缓存
                 user.setJobtitle(gw);
                 user.setUserDepartment(Integer.parseInt(bm));
                 user.setUserSubCompany1(Integer.parseInt(gs));
