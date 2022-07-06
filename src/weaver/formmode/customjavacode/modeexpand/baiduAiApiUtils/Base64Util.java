@@ -1,4 +1,4 @@
-package weaver.formmode.customjavacode.modeexpand.baiduAiAipUtils;
+package weaver.formmode.customjavacode.modeexpand.baiduAiApiUtils;
 
 /**
  * Base64 工具类

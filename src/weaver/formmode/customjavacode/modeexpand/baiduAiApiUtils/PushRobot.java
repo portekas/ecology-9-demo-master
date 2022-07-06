@@ -1,4 +1,4 @@
-package weaver.formmode.customjavacode.modeexpand.baiduAiAipUtils;
+package weaver.formmode.customjavacode.modeexpand.baiduAiApiUtils;
 
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
