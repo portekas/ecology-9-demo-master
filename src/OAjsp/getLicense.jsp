@@ -782,7 +782,7 @@
         out.print(json);
 
     }else if("getwjyyzllx".equals(operation)) {
-        rs.executeQuery("select 1 from uf_yysqgzzlflpz where zllx = " + par1 + " AND ((',' + CONVERT(VARCHAR(MAX), dygw) + ',' LIKE '%," + par2 + ",%' ESCAPE '/') or dygw is null) ");
+        rs.executeQuery("select 1 from uf_yysqgzzlflpz where zllx = " + par1 + " AND ((',' + CONVERT(VARCHAR(MAX), dygw) + ',' LIKE '%," + par2 + ",%' ESCAPE '/') or dygw = '' or dygw is null )");
         if (rs.next()) {
             json.put("ishave", "true");
         }
