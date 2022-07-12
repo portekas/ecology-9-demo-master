@@ -8,13 +8,14 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import weaver.formmode.customjavacode.modeexpand.baiduAiAipUtils.ErrorMsgUtils;
-import weaver.formmode.customjavacode.modeexpand.baiduAiAipUtils.HttpUtil;
+import weaver.formmode.customjavacode.modeexpand.aliyunApiUtils.RecognitionInvoiceAliApi;
+import weaver.formmode.customjavacode.modeexpand.baiduAiApiUtils.ErrorMsgUtils;
+import weaver.formmode.customjavacode.modeexpand.baiduAiApiUtils.HttpUtil;
 import com.baidu.aip.util.Base64Util;
 import weaver.conn.RecordSet;
 import weaver.file.AESCoder;
 import weaver.formmode.customjavacode.AbstractModeExpandJavaCodeNew;
-import weaver.formmode.customjavacode.modeexpand.baiduAiAipUtils.PushRobot;
+import weaver.formmode.customjavacode.modeexpand.baiduAiApiUtils.PushRobot;
 import weaver.general.Util;
 import weaver.hrm.User;
 import weaver.soa.workflow.request.RequestInfo;
@@ -70,7 +71,7 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
                 String url = "https://aip.baidubce.com/rest/2.0/ocr/v1/vat_invoice";
                 //遍历多个附件
                 for (String zzs : zzsfp.split(",")) {
-                    JSONObject jsonobj = recognitionInvoice(url, zzs ,user);
+                    JSONObject jsonobj = recognitionInvoiceBaiduApi(url, zzs ,user);
 
                     rs.executeQuery("select 1 from uf_fptz where InvoiceNum = '"+jsonobj.get("InvoiceNum")+"'");
                     if (!rs.next()){
@@ -78,7 +79,7 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
                         addInvoiceData(fileids,jsonobj,zzs,user.getUID());
 
                         //获取解析后的数据_遍历明细字段 并插入明细表
-                        addInvoiceDetailData(fileids_det,jsonobj,zzs);
+                        addInvoiceDetailDataZZS(fileids_det,jsonobj,zzs);
                     }else{
                         if(cffp.length()>0){
                             cffp.append(",");
@@ -92,9 +93,8 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
 
             //其他普通发票
             if (StringUtils.isNotBlank(ptfp)) {
-                String url = "https://aip.baidubce.com/rest/2.0/ocr/v1/invoice";
                 for (String pt : ptfp.split(",")) {
-                    JSONObject jsonobj = recognitionInvoice(url, pt,user);
+                    JSONObject jsonobj = recognitionInvoiceAliApi(pt,user);
 
                     rs.executeQuery("select 1 from uf_fptz where InvoiceNum = '"+jsonobj.get("InvoiceNum")+"'");
                     if (!rs.next()){
@@ -102,7 +102,7 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
                         addInvoiceData(fileids,jsonobj,pt,user.getUID());
 
                         //获取解析后的数据_遍历明细字段 并插入明细表
-                        addInvoiceDetailData(fileids_det,jsonobj,pt);
+                        addInvoiceDetailDataPT(fileids_det,jsonobj,pt);
                     }else{
                         if(cffp.length()>0){
                             cffp.append(",");
@@ -216,11 +216,11 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
      * @param fileid 需要识别的附件ID
      * @return
      */
-    public JSONObject recognitionInvoice(String url,String fileid,User user) throws Exception{
+    public JSONObject recognitionInvoiceBaiduApi(String url,String fileid,User user) throws Exception{
         RecordSet rs = new RecordSet();
-            //查询附件
-            rs.executeQuery("SELECT imagefilename,filerealpath,iszip,isaesencrypt,aescode FROM imagefile WHERE imagefileid = (SELECT imagefileid from docimagefile WHERE docid = ?)"
-                    , new Object[]{fileid});
+        //查询附件
+        rs.executeQuery("SELECT imagefilename,filerealpath,iszip,isaesencrypt,aescode FROM imagefile WHERE imagefileid = (SELECT imagefileid from docimagefile WHERE docid = ?)"
+                , new Object[]{fileid});
             if (rs.next()) {
                 InputStream inputStream = null;
                 //文件路径
@@ -250,11 +250,10 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
                     inputStream = AESCoder.decrypt((InputStream) inputStream, aescode);
                 }
                 byte[] imgData = IOUtils.toByteArray(inputStream);
-                log.error("进来了----3-3。。");
                 String imgParam = "";
                 try {
-                    String imgStr = Base64Util.encode(imgData);log.error("进来了----3-4");
-                     imgParam = URLEncoder.encode(imgStr, "UTF-8");log.error("进来了----3-5");
+                    String imgStr = Base64Util.encode(imgData);
+                     imgParam = URLEncoder.encode(imgStr, "UTF-8");
                 }catch (Exception e){
                     log.error(e.getMessage());
                     e.printStackTrace();
@@ -265,33 +264,95 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
                 String param = "";
                 if (imagefilename.indexOf(".") > -1) {
                     filetype = imagefilename.substring(imagefilename.lastIndexOf(".") + 1);
-                }log.error("进来了----3-6");
+                }
                 if ("jpg".equalsIgnoreCase(filetype) || "jpeg".equalsIgnoreCase(filetype)
                         || "png".equalsIgnoreCase(filetype) || "bmp".equalsIgnoreCase(filetype)) {
                     param = "image=" + imgParam;
-                }log.error("进来了----3-7");
+                }
                 if("pdf".equalsIgnoreCase(filetype)){
                     param = "pdf_file=" + imgParam;
-                }log.error("进来了----3-4");
+                }
                 //文件不支持
                 if(StringUtils.isBlank(param)){
                     return null;
-                }log.error("进来了----4");
+                }
                 String result = HttpUtil.post(url, getAuth(), param);
-                JSONObject jsonObject = JSONObject.parseObject(result);log.error("进来了----5");
-                if(jsonObject.containsKey("error_code")){log.error("进来了----6");
-                    PushRobot.pushRobot(user.getFirstname()+"调用文字识别API失败",
+                JSONObject jsonObject = JSONObject.parseObject(result);
+                if(jsonObject.containsKey("error_code")){
+                    //将错误信息推送至钉钉机器人
+                    PushRobot.pushRobot(user.getUsername()+"调用百度文字识别API失败",
                             ErrorMsgUtils.errorMsgUtils(jsonObject.getString("error_code"),jsonObject.getString("error_code")));
-                    throw new RuntimeException("文字识别失败");
-                }else{log.error("进来了----7");
+                    throw new RuntimeException(ErrorMsgUtils.errorMsgUtils(jsonObject.getString("error_code")
+                    ,jsonObject.getString("error_code")));
+                }else{
                     JSONObject words_result = jsonObject.getJSONObject("words_result");
 
                     //修改发票附件文件名
                     updateInvoiceFileName(fileid,words_result,imagefilename);
-
+                    rs.writeLog("进来了5");
                     return words_result;
                 }
             }
+        return null;
+    }
+
+    /**
+     * 调用阿里文字识别，返回识别结果
+     * @param fileid 需要识别的附件ID
+     * @return
+     */
+    public JSONObject recognitionInvoiceAliApi(String fileid,User user) throws Exception{
+        RecordSet rs = new RecordSet();
+        //查询附件
+        rs.executeQuery("SELECT imagefilename,filerealpath,iszip,isaesencrypt,aescode FROM imagefile WHERE imagefileid = (SELECT imagefileid from docimagefile WHERE docid = ?)"
+                , new Object[]{fileid});
+        if (rs.next()) {
+            InputStream inputStream = null;
+            //文件路径
+            String filePath = Util.null2String(rs.getString("filerealpath"));
+            //文件名
+            String imagefilename = Util.null2String(rs.getString("imagefilename"));
+            //是否压缩
+            String iszip = Util.null2String(rs.getString("iszip"));
+            //是否加密
+            String isaesencrypt = Util.null2String(rs.getString("isaesencrypt"));
+            //加密密码
+            String aescode = Util.null2String(rs.getString("aescode"));
+
+            ZipInputStream ziStream = null;
+            File fpath = new File(filePath);
+            //是否压缩
+            if (iszip.equals("1")) {
+                ziStream = new ZipInputStream(new FileInputStream(fpath));
+                if (ziStream.getNextEntry() != null) {
+                    inputStream = new BufferedInputStream(ziStream);
+                }
+            } else {
+                inputStream = new BufferedInputStream(new FileInputStream(fpath));
+            }
+            //是否加密
+            if (isaesencrypt.equals("1")) {
+                inputStream = AESCoder.decrypt((InputStream) inputStream, aescode);
+            }
+
+            String filetype = "";
+            if (imagefilename.indexOf(".") > -1) {
+                filetype = imagefilename.substring(imagefilename.lastIndexOf(".") + 1);
+            }
+
+            try {
+                //调用阿里云接口
+                JSONObject words_result = RecognitionInvoiceAliApi.analyze(inputStream,filetype);
+
+                //修改发票附件文件名
+                updateInvoiceFileName(fileid,words_result,imagefilename);
+
+                return words_result;
+            }catch (Exception e){
+                PushRobot.pushRobot(user.getUsername()+" 调用阿里文字识别API失败",e.getMessage());
+                throw new RuntimeException("普通发票识别失败请联系管理员");
+            }
+        }
         return null;
     }
 
@@ -336,12 +397,12 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
     }
 
     /**
-     * 解析并插入发票货物明细
+     * 增值税发票解析并插入发票货物明细
      * @param filelds_det 字段集合
      * @param jsonobj 发票识别结果
      * @param fileld 附件ID
      */
-    public void addInvoiceDetailData(List<String> filelds_det,JSONObject jsonobj,String fileld){
+    public void addInvoiceDetailDataZZS(List<String> filelds_det,JSONObject jsonobj,String fileld){
         //解析明细
         List<Map<String, String>> hlist_det = new ArrayList<>();
         Map<String,String> map = null;
@@ -361,12 +422,13 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
                 }
             }
         }
-        //插入明细
+        //获取台账主表ID
         RecordSet rs = new RecordSet();
         rs.execute("select id from uf_fptz where CAST(fp AS VARCHAR) = '"+fileld+"' order by id desc");
         if (rs.next()){
             String mainid = rs.getString("id");
             StringBuilder sb = null;
+            //将发票明细值按字段名称拼接
             for(Map<String,String> arr:hlist_det){
                 sb = new StringBuilder();
                 for(String fi : filelds_det){
@@ -379,6 +441,41 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
                     }
                     sb.append("'");
                 }
+                //插入明细
+                rs.executeUpdate("INSERT INTO uf_fptz_dt1 ("+String.join(",", filelds_det)+",mainid) VALUES ("+sb.toString()+","+mainid+")");
+            }
+        }
+    }
+
+    /**
+     * 普通发票解析并插入发票货物明细
+     * @param filelds_det 明细字段集合
+     * @param jsonobj 发票识别结果
+     * @param fileld 附件ID
+     */
+    public void addInvoiceDetailDataPT(List<String> filelds_det,JSONObject jsonobj,String fileld){
+        //获取台账主表ID
+        RecordSet rs = new RecordSet();
+        rs.execute("select id from uf_fptz where CAST(fp AS VARCHAR) = '"+fileld+"' order by id desc");
+        if (rs.next()){
+            String mainid = rs.getString("id");
+            StringBuilder sb = null;
+            //将发票明细值按字段名称拼接
+            JSONArray jarr = jsonobj.getJSONArray("invoiceDetails");
+            for(Object jo : jarr){
+                JSONObject obj = (JSONObject) jo;
+                sb = new StringBuilder();
+                for(String fi : filelds_det){
+                    if(sb.length() > 0){
+                        sb.append(",");
+                    }
+                    sb.append("'");
+                    if(obj.containsKey(fi)){
+                        sb.append(obj.get(fi));
+                    }
+                    sb.append("'");
+                }
+                //插入明细
                 rs.executeUpdate("INSERT INTO uf_fptz_dt1 ("+String.join(",", filelds_det)+",mainid) VALUES ("+sb.toString()+","+mainid+")");
             }
         }
