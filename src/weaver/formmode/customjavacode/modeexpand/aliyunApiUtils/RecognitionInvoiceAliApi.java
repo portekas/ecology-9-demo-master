@@ -43,7 +43,7 @@ public class RecognitionInvoiceAliApi {
      * @throws Exception
      */
     public static JSONObject analyze(InputStream inp,String filetype) throws Exception{
-        com.aliyun.ocr_api20210707.Client client = createClient("LTAI5tPQFGeJTQehBDhZ8LUR", "Ncpu88FYiFuq6ZhPnugwnDxf5VOVUa");
+        com.aliyun.ocr_api20210707.Client client = createClient("", "");
         RecognizeInvoiceRequest recognize = new RecognizeInvoiceRequest();
         //将pdf转为图片
 
