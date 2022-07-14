@@ -371,7 +371,13 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
             if (jsonobj.containsKey(fileid)) {
                 map = new HashMap<>();
                 map.put("fileld", fileid);
-                map.put("value", jsonobj.getString(fileid));
+                String val = jsonobj.getString(fileid);
+                //税额字段将*替换为0
+                if("TotalTax".equals(fileid)){
+                    val = val.replaceAll("\\*\\*\\*","0");
+                    val = val.replaceAll("\\*","0");
+                }
+                map.put("value", val);
                 hlist.add(map);
             }
         }
