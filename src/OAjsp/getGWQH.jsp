@@ -23,7 +23,7 @@
     RecordSet rs = new RecordSet();
     rs.executeQuery("select ry,gw,bm,gs,sj from uf_gwrydygx where " +
             "ry = '"+user.getUID()+"' " +
-            "and gw != '"+user.getJobtitle()+"'" +
+            "and (gw != '"+user.getJobtitle()+"' or bm != '"+user.getUserDepartment()+"') " +
             "and (mrgw = '0' or datediff(day,getdate(),yxqz) >= 0)");
     if(rs.next()){
         String ry = rs.getString("ry");
