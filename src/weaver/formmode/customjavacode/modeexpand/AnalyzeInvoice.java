@@ -130,36 +130,8 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
         return result;
     }
 
-    //获取增值税发票_主数据
-    public List<String> getVatInvoice_h(){
-        //获取配置
-        RecordSet rs = new RecordSet();
-        rs.execute("SELECT zd FROM uf_wzsbcspz_dt1 uwd WHERE uwd.mainid = '1'");
-        List<String> hlist = new ArrayList<>();
-        while (rs.next()){
-            hlist.add(rs.getString("zd"));
-        }
-        return hlist;
-    }
-
-    //获取增值税发票_商品明细数据
-    public List<String> getVatInvoice_s(){
-        RecordSet rs = new RecordSet();
-        rs.execute("SELECT zd FROM uf_wzsbcspz_dt2 uwd WHERE uwd.mainid = '1'");
-        List<String> slist = new ArrayList<>();
-        while (rs.next()){
-            slist.add(rs.getString("zd"));
-        }
-        return slist;
-    }
-
     /**
      * 获取权限token
-     * @return 返回示例：
-     * {
-     * "access_token": "24.460da4889caad24cccdb1fea17221975.2592000.1491995545.282335-1234567",
-     * "expires_in": 2592000
-     * }
      */
     public static String getAuth() throws Exception{
         // 官网获取的 API Key 更新为你注册的
@@ -289,7 +261,6 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
 
                     //修改发票附件文件名
                     updateInvoiceFileName(fileid,words_result,imagefilename);
-                    rs.writeLog("进来了5");
                     return words_result;
                 }
             }
@@ -372,10 +343,13 @@ public class AnalyzeInvoice extends AbstractModeExpandJavaCodeNew {
                 map = new HashMap<>();
                 map.put("fileld", fileid);
                 String val = jsonobj.getString(fileid);
-                //税额字段将*替换为0
+                //税额字段转换为小数
                 if("TotalTax".equals(fileid)){
-                    val = val.replaceAll("\\*\\*\\*","0");
-                    val = val.replaceAll("\\*","0");
+                    try {
+                        val = Double.parseDouble(val)+"";
+                    }catch (NumberFormatException e){
+                        val = "0";
+                    }
                 }
                 map.put("value", val);
                 hlist.add(map);
