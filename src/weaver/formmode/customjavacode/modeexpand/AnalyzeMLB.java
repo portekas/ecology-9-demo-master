@@ -344,6 +344,7 @@ public class AnalyzeMLB extends AbstractModeExpandJavaCodeNew {
             if(sheetname.indexOf("预算") > -1){
                 break;
             }
+            sheetAt = null;
         }
 
         //没有预算页不用读取
